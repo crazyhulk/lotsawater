@@ -12,6 +12,13 @@
 	{
 		screenshot=nil;
 
+//        NSLog(@"==============frame:%f", frame.size.width);
+//        NSScreen *screen = [NSScreen mainScreen];
+//        NSDictionary *description = [screen deviceDescription];
+//        NSSize displayPixelSize = [[description objectForKey:NSDeviceSize] sizeValue];
+//        NSLog(@"==============frame1111:%f", displayPixelSize.width);
+//        NSLog(@"==============retina:%f", [[NSScreen mainScreen] backingScaleFactor]);
+    
 		[self setAnimationTimeInterval:1/60.0];
 		[self setConfigName:@"ConfigSheet"];
 		[self setSaverName:@"LotsaWater" andDefaults:[NSDictionary dictionaryWithObjectsAndKeys:

@@ -17,8 +17,8 @@
 		clockwin=nil;
 		clockpopup=nil;
 
-		screen_w=(int)frame.size.width;
-		screen_h=(int)frame.size.height;
+		screen_w=(int)frame.size.width * [[NSScreen mainScreen] backingScaleFactor];
+		screen_h=(int)frame.size.height * [[NSScreen mainScreen] backingScaleFactor];
 
 		prevtime=starttime=0;
 
