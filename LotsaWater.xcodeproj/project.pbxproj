@@ -11,7 +11,6 @@
 		1B0BFC92091EC98F0012580D /* Water.h in Headers */ = {isa = PBXBuildFile; fileRef = 1B0BFC90091EC98F0012580D /* Water.h */; };
 		1B0BFC93091EC98F0012580D /* Water.c in Sources */ = {isa = PBXBuildFile; fileRef = 1B0BFC91091EC98F0012580D /* Water.c */; settings = {COMPILER_FLAGS = "-fast -fPIC"; }; };
 		1B0BFFD9092039AF0012580D /* reflections.png in Resources */ = {isa = PBXBuildFile; fileRef = 1B0BFFD8092039AF0012580D /* reflections.png */; };
-		1B1B99300B07C18F00EC8324 /* ConfigSheet.nib in Resources */ = {isa = PBXBuildFile; fileRef = 1B1B992F0B07C18F00EC8324 /* ConfigSheet.nib */; };
 		1B81B012136BA2BD002AA257 /* LotsaView.h in Headers */ = {isa = PBXBuildFile; fileRef = 1B81AFFE136BA2BD002AA257 /* LotsaView.h */; };
 		1B81B013136BA2BD002AA257 /* LotsaView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1B81AFFF136BA2BD002AA257 /* LotsaView.m */; };
 		1B81B014136BA2BD002AA257 /* NameMangler.h in Headers */ = {isa = PBXBuildFile; fileRef = 1B81B000136BA2BD002AA257 /* NameMangler.h */; };
@@ -25,6 +24,9 @@
 		1B81B268136BA2C5002AA257 /* Vector.h in Headers */ = {isa = PBXBuildFile; fileRef = 1B81B146136BA2C5002AA257 /* Vector.h */; };
 		1B81B272136CD811002AA257 /* GLConverter.h in Headers */ = {isa = PBXBuildFile; fileRef = 1B81B270136CD811002AA257 /* GLConverter.h */; };
 		1B81B273136CD811002AA257 /* GLConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = 1B81B271136CD811002AA257 /* GLConverter.m */; };
+		76891D5829BC485E00C8629B /* ScreenCaptureKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 76891D5729BC485E00C8629B /* ScreenCaptureKit.framework */; };
+		76891D5A29BC488000C8629B /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 76891D5929BC488000C8629B /* AVFoundation.framework */; };
+		76E8802929BC5F8D006EDBE7 /* ConfigSheet.nib in Resources */ = {isa = PBXBuildFile; fileRef = 76E8802829BC5F8D006EDBE7 /* ConfigSheet.nib */; };
 		8D255AC70486D3F9007BF209 /* LotsaWater_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 32DBCFA80370C50100C91783 /* LotsaWater_Prefix.pch */; };
 		8D255AC80486D3F9007BF209 /* LotsaWaterView.h in Headers */ = {isa = PBXBuildFile; fileRef = F50079790118B23001CA0E54 /* LotsaWaterView.h */; };
 		8D255ACA0486D3F9007BF209 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C167DFE841241C02AAC07 /* InfoPlist.strings */; };
@@ -35,15 +37,11 @@
 
 /* Begin PBXFileReference section */
 		06F27B2DFFEEEFEF11CA0E56 /* ScreenSaver.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScreenSaver.framework; path = /System/Library/Frameworks/ScreenSaver.framework; sourceTree = "<absolute>"; };
-		089C167EFE841241C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1058C7ADFEA557BF11CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		1B0BFC69091EC5EB0012580D /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = /System/Library/Frameworks/OpenGL.framework; sourceTree = "<absolute>"; };
 		1B0BFC90091EC98F0012580D /* Water.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Water.h; sourceTree = "<group>"; };
 		1B0BFC91091EC98F0012580D /* Water.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Water.c; sourceTree = "<group>"; };
 		1B0BFFD8092039AF0012580D /* reflections.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = reflections.png; sourceTree = "<group>"; };
-		1B1B99310B07C19400EC8324 /* Japanese */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Japanese; path = Japanese.lproj/ConfigSheet.nib; sourceTree = "<group>"; };
-		1B1B99330B07C1AE00EC8324 /* Japanese */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = Japanese; path = Japanese.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		1B5057280922E21100877C3D /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/ConfigSheet.nib; sourceTree = "<group>"; };
 		1B81AFFE136BA2BD002AA257 /* LotsaView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LotsaView.h; sourceTree = "<group>"; };
 		1B81AFFF136BA2BD002AA257 /* LotsaView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LotsaView.m; sourceTree = "<group>"; };
 		1B81B000136BA2BD002AA257 /* NameMangler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NameMangler.h; sourceTree = "<group>"; };
@@ -58,6 +56,11 @@
 		1B81B270136CD811002AA257 /* GLConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GLConverter.h; sourceTree = "<group>"; };
 		1B81B271136CD811002AA257 /* GLConverter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GLConverter.m; sourceTree = "<group>"; };
 		32DBCFA80370C50100C91783 /* LotsaWater_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LotsaWater_Prefix.pch; sourceTree = "<group>"; };
+		76891D5529BC409200C8629B /* LotsaWater.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LotsaWater.entitlements; sourceTree = "<group>"; };
+		76891D5729BC485E00C8629B /* ScreenCaptureKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScreenCaptureKit.framework; path = System/Library/Frameworks/ScreenCaptureKit.framework; sourceTree = SDKROOT; };
+		76891D5929BC488000C8629B /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		76E8802829BC5F8D006EDBE7 /* ConfigSheet.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; path = ConfigSheet.nib; sourceTree = "<group>"; };
+		76E8802A29BC6020006EDBE7 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		8D255AD20486D3F9007BF209 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		8D255AD30486D3F9007BF209 /* LotsaWater.saver */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LotsaWater.saver; sourceTree = BUILT_PRODUCTS_DIR; };
 		F50079790118B23001CA0E54 /* LotsaWaterView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LotsaWaterView.h; sourceTree = "<group>"; };
@@ -71,6 +74,8 @@
 			files = (
 				8D255ACE0486D3F9007BF209 /* Cocoa.framework in Frameworks */,
 				8D255ACF0486D3F9007BF209 /* ScreenSaver.framework in Frameworks */,
+				76891D5A29BC488000C8629B /* AVFoundation.framework in Frameworks */,
+				76891D5829BC485E00C8629B /* ScreenCaptureKit.framework in Frameworks */,
 				1B0BFC6A091EC5EB0012580D /* OpenGL.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -81,11 +86,13 @@
 		089C166AFE841209C02AAC07 /* LotsaWater */ = {
 			isa = PBXGroup;
 			children = (
+				76891D5529BC409200C8629B /* LotsaWater.entitlements */,
 				08FB77AFFE84173DC02AAC07 /* Sources */,
 				089C167CFE841241C02AAC07 /* Resources */,
 				089C1671FE841209C02AAC07 /* Frameworks and Libraries */,
 				32DBCFA80370C50100C91783 /* LotsaWater_Prefix.pch */,
 				19C28FB8FE9D52D311CA2CBB /* Products */,
+				76891D5629BC485E00C8629B /* Frameworks */,
 			);
 			name = LotsaWater;
 			sourceTree = "<group>";
@@ -104,7 +111,7 @@
 			isa = PBXGroup;
 			children = (
 				1B0BFFD8092039AF0012580D /* reflections.png */,
-				1B1B992F0B07C18F00EC8324 /* ConfigSheet.nib */,
+				76E8802829BC5F8D006EDBE7 /* ConfigSheet.nib */,
 				8D255AD20486D3F9007BF209 /* Info.plist */,
 				089C167DFE841241C02AAC07 /* InfoPlist.strings */,
 			);
@@ -167,6 +174,15 @@
 			path = Vector;
 			sourceTree = "<group>";
 		};
+		76891D5629BC485E00C8629B /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				76891D5929BC488000C8629B /* AVFoundation.framework */,
+				76891D5729BC485E00C8629B /* ScreenCaptureKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -216,10 +232,11 @@
 		089C1669FE841209C02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 1420;
 				TargetAttributes = {
 					8D255AC50486D3F9007BF209 = {
-						DevelopmentTeam = 95923X8WXP;
+						DevelopmentTeam = GWG2TQ5XG2;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -247,8 +264,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D255ACA0486D3F9007BF209 /* InfoPlist.strings in Resources */,
+				76E8802929BC5F8D006EDBE7 /* ConfigSheet.nib in Resources */,
 				1B0BFFD9092039AF0012580D /* reflections.png in Resources */,
-				1B1B99300B07C18F00EC8324 /* ConfigSheet.nib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -286,19 +303,9 @@
 		089C167DFE841241C02AAC07 /* InfoPlist.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
-				089C167EFE841241C02AAC07 /* English */,
-				1B1B99330B07C1AE00EC8324 /* Japanese */,
+				76E8802A29BC6020006EDBE7 /* en */,
 			);
 			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
-		1B1B992F0B07C18F00EC8324 /* ConfigSheet.nib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1B5057280922E21100877C3D /* English */,
-				1B1B99310B07C19400EC8324 /* Japanese */,
-			);
-			name = ConfigSheet.nib;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -307,10 +314,11 @@
 		1B0BFB61091C4EA90012580D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				DEVELOPMENT_TEAM = 95923X8WXP;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = GWG2TQ5XG2;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_ENABLE_OBJC_GC = unsupported;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -326,8 +334,10 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				OTHER_CFLAGS = "-DClassNamePrefix=LW";
+				PRODUCT_BUNDLE_IDENTIFIER = in.xizi.lotsawater;
 				PRODUCT_NAME = LotsaWater;
 				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				USE_HEADERMAP = NO;
 				WRAPPER_EXTENSION = saver;
 			};
@@ -336,10 +346,11 @@
 		1B0BFB62091C4EA90012580D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				DEVELOPMENT_TEAM = 95923X8WXP;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = GWG2TQ5XG2;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_ENABLE_OBJC_GC = unsupported;
 				GCC_FAST_MATH = YES;
@@ -362,8 +373,10 @@
 					"-fsingle-precision-constant",
 				);
 				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
+				PRODUCT_BUNDLE_IDENTIFIER = in.xizi.lotsawater;
 				PRODUCT_NAME = LotsaWater;
 				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				USE_HEADERMAP = NO;
 				WRAPPER_EXTENSION = saver;
 			};

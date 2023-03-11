@@ -4,14 +4,18 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
+	<key>CFBundleDisplayName</key>
+	<string>LotsaWater</string>
 	<key>CFBundleExecutable</key>
 	<string>LotsaWater</string>
 	<key>CFBundleIconFile</key>
 	<string></string>
 	<key>CFBundleIdentifier</key>
-	<string>cx.c3.lotsawater</string>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>LotsaWater</string>
 	<key>CFBundlePackageType</key>
 	<string>BNDL</string>
 	<key>CFBundleShortVersionString</key>
@@ -20,15 +24,15 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>1.8</string>
-	<key>NSPrincipalClass</key>
-	<string>LWLotsaWaterView</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.entertainment</string>
-	<key>CFBundleName</key>
-	<string>LotsaWater</string>
-	<key>CFBundleDisplayName</key>
-	<string>LotsaWater</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>This screen saver captures screenshots to create a live wallpaper of the desktop, which need screen recording permissions.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>2011 Dag Ågren</string>
+	<key>NSPrincipalClass</key>
+	<string>LWLotsaWaterView</string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>alert</string>
 </dict>
 </plist>

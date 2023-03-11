@@ -1,6 +1,11 @@
 #import "LotsaView.h"
 
 #import <sys/time.h>
+#import <CoreGraphics/CoreGraphics.h>
+#import <AVFoundation/AVFoundation.h>
+
+// Import the AVCaptureDevice header file
+#import <AVFoundation/AVCaptureDevice.h>
 
 
 
@@ -269,21 +274,41 @@
 
 -(NSBitmapImageRep *)grabScreenShot
 {
+    // This just invokes the API as you would if you wanted to grab a screen shot. The equivalent using the UI would be to
+    // enable all windows, turn off "Fit Image Tightly", and then select all windows in the list.
+    
+//    bool hasScreenAccess = CGPreflightScreenCaptureAccess();
+//    if (!hasScreenAccess) {
+//        CGRequestScreenCaptureAccess();
+//    }
+//
+//    [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
+//        NSLog(@"=======%hhd", granted);
+//        if (granted) {
+//            // User granted permission, you can now capture the screen.
+//        } else {
+//            // User denied permission, handle this case appropriately.
+//        }
+//    }];
+
+    
 	NSInteger windowid=[[self window] windowNumber];
 	NSRect bounds=[[[self window] screen] frame];
-
-	// Mavericks workaround: If the second window is loginwindow, use it as the base instead,
-	// because it would otherwise block the view.
-    NSArray *windows=(id)CFBridgingRelease(CGWindowListCopyWindowInfo(kCGWindowListOptionAll,kCGNullWindowID));
-	if([windows count]>2)
-	{
-		NSDictionary *second=[windows objectAtIndex:1];
-		NSString *owner=[second objectForKey:(NSString *)kCGWindowOwnerName];
-		if([owner isEqual:@"loginwindow"])
-		{
-			windowid=[[second objectForKey:(NSString *)kCGWindowNumber] integerValue];
-		}
-	}
+//
+//	// Mavericks workaround: If the second window is loginwindow, use it as the base instead,
+//	// because it would otherwise block the view.
+//    NSArray *windows=(id)CFBridgingRelease(CGWindowListCopyWindowInfo(kCGWindowListOptionAll,kCGNullWindowID));
+//	if([windows count]>2)
+//	{
+//		NSDictionary *second=[windows objectAtIndex:1];
+//		NSString *owner=[second objectForKey:(NSString *)kCGWindowOwnerName];
+//		if([owner isEqual:@"loginwindow"])
+//		{
+//			windowid=[[second objectForKey:(NSString *)kCGWindowNumber] integerValue];
+//		}
+//	}
+//    CGImageRef screenShot = CGWindowListCreateImage(CGRectInfinite, kCGWindowListOptionOnScreenOnly, windowid, kCGWindowImageDefault);
+//    return [[NSBitmapImageRep alloc] initWithCGImage:screenShot];
 
 	// Geez Lousie, isn't there a sane way to convert these coordinate systems?
 	NSRect mainscreen=[[NSScreen mainScreen] frame];
