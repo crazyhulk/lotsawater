@@ -26,6 +26,14 @@
 		1B81B273136CD811002AA257 /* GLConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = 1B81B271136CD811002AA257 /* GLConverter.m */; };
 		76891D5829BC485E00C8629B /* ScreenCaptureKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 76891D5729BC485E00C8629B /* ScreenCaptureKit.framework */; };
 		76891D5A29BC488000C8629B /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 76891D5929BC488000C8629B /* AVFoundation.framework */; };
+		76E31DBC2DFD879C00F2F856 /* MTLRenderer.h in Headers */ = {isa = PBXBuildFile; fileRef = 76E31DB72DFD879C00F2F856 /* MTLRenderer.h */; };
+		76E31DBD2DFD879C00F2F856 /* MTLTexture.h in Headers */ = {isa = PBXBuildFile; fileRef = 76E31DB92DFD879C00F2F856 /* MTLTexture.h */; };
+		76E31DBE2DFD879C00F2F856 /* MTLBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 76E31DB52DFD879C00F2F856 /* MTLBuffer.h */; };
+		76E31DBF2DFD879C00F2F856 /* MTLRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 76E31DB82DFD879C00F2F856 /* MTLRenderer.m */; };
+		76E31DC02DFD879C00F2F856 /* WaterShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 76E31DBB2DFD879C00F2F856 /* WaterShaders.metal */; };
+		76E31DC12DFD879C00F2F856 /* MTLBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = 76E31DB62DFD879C00F2F856 /* MTLBuffer.m */; };
+		76E31DC22DFD879C00F2F856 /* MTLTexture.m in Sources */ = {isa = PBXBuildFile; fileRef = 76E31DBA2DFD879C00F2F856 /* MTLTexture.m */; };
+		76E31DC42DFD87C200F2F856 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 76E31DC32DFD87C200F2F856 /* Metal.framework */; };
 		76E8802929BC5F8D006EDBE7 /* ConfigSheet.nib in Resources */ = {isa = PBXBuildFile; fileRef = 76E8802829BC5F8D006EDBE7 /* ConfigSheet.nib */; };
 		8D255AC70486D3F9007BF209 /* LotsaWater_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 32DBCFA80370C50100C91783 /* LotsaWater_Prefix.pch */; };
 		8D255AC80486D3F9007BF209 /* LotsaWaterView.h in Headers */ = {isa = PBXBuildFile; fileRef = F50079790118B23001CA0E54 /* LotsaWaterView.h */; };
@@ -59,6 +67,14 @@
 		76891D5529BC409200C8629B /* LotsaWater.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LotsaWater.entitlements; sourceTree = "<group>"; };
 		76891D5729BC485E00C8629B /* ScreenCaptureKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScreenCaptureKit.framework; path = System/Library/Frameworks/ScreenCaptureKit.framework; sourceTree = SDKROOT; };
 		76891D5929BC488000C8629B /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		76E31DB52DFD879C00F2F856 /* MTLBuffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MTLBuffer.h; sourceTree = "<group>"; };
+		76E31DB62DFD879C00F2F856 /* MTLBuffer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MTLBuffer.m; sourceTree = "<group>"; };
+		76E31DB72DFD879C00F2F856 /* MTLRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MTLRenderer.h; sourceTree = "<group>"; };
+		76E31DB82DFD879C00F2F856 /* MTLRenderer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MTLRenderer.m; sourceTree = "<group>"; };
+		76E31DB92DFD879C00F2F856 /* MTLTexture.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MTLTexture.h; sourceTree = "<group>"; };
+		76E31DBA2DFD879C00F2F856 /* MTLTexture.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MTLTexture.m; sourceTree = "<group>"; };
+		76E31DBB2DFD879C00F2F856 /* WaterShaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = WaterShaders.metal; sourceTree = "<group>"; };
+		76E31DC32DFD87C200F2F856 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		76E8802829BC5F8D006EDBE7 /* ConfigSheet.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; path = ConfigSheet.nib; sourceTree = "<group>"; };
 		76E8802A29BC6020006EDBE7 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		8D255AD20486D3F9007BF209 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -72,6 +88,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				76E31DC42DFD87C200F2F856 /* Metal.framework in Frameworks */,
 				8D255ACE0486D3F9007BF209 /* Cocoa.framework in Frameworks */,
 				8D255ACF0486D3F9007BF209 /* ScreenSaver.framework in Frameworks */,
 				76891D5A29BC488000C8629B /* AVFoundation.framework in Frameworks */,
@@ -125,6 +142,13 @@
 				F500797A0118B23001CA0E54 /* LotsaWaterView.m */,
 				1B0BFC90091EC98F0012580D /* Water.h */,
 				1B0BFC91091EC98F0012580D /* Water.c */,
+				76E31DB52DFD879C00F2F856 /* MTLBuffer.h */,
+				76E31DB62DFD879C00F2F856 /* MTLBuffer.m */,
+				76E31DB72DFD879C00F2F856 /* MTLRenderer.h */,
+				76E31DB82DFD879C00F2F856 /* MTLRenderer.m */,
+				76E31DB92DFD879C00F2F856 /* MTLTexture.h */,
+				76E31DBA2DFD879C00F2F856 /* MTLTexture.m */,
+				76E31DBB2DFD879C00F2F856 /* WaterShaders.metal */,
 				1B81AFEA136BA2BD002AA257 /* LotsaCore */,
 				1B81B017136BA2C4002AA257 /* GLObject */,
 			);
@@ -177,6 +201,7 @@
 		76891D5629BC485E00C8629B /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				76E31DC32DFD87C200F2F856 /* Metal.framework */,
 				76891D5929BC488000C8629B /* AVFoundation.framework */,
 				76891D5729BC485E00C8629B /* ScreenCaptureKit.framework */,
 			);
@@ -193,6 +218,9 @@
 				8D255AC70486D3F9007BF209 /* LotsaWater_Prefix.pch in Headers */,
 				8D255AC80486D3F9007BF209 /* LotsaWaterView.h in Headers */,
 				1B0BFC92091EC98F0012580D /* Water.h in Headers */,
+				76E31DBC2DFD879C00F2F856 /* MTLRenderer.h in Headers */,
+				76E31DBD2DFD879C00F2F856 /* MTLTexture.h in Headers */,
+				76E31DBE2DFD879C00F2F856 /* MTLBuffer.h in Headers */,
 				1B81B012136BA2BD002AA257 /* LotsaView.h in Headers */,
 				1B81B014136BA2BD002AA257 /* NameMangler.h in Headers */,
 				1B81B016136BA2BD002AA257 /* Random.h in Headers */,
@@ -293,6 +321,10 @@
 				1B81B258136BA2C5002AA257 /* Matrix.c in Sources */,
 				1B81B25E136BA2C5002AA257 /* Quaternion.c in Sources */,
 				1B81B267136BA2C5002AA257 /* Vector.c in Sources */,
+				76E31DBF2DFD879C00F2F856 /* MTLRenderer.m in Sources */,
+				76E31DC02DFD879C00F2F856 /* WaterShaders.metal in Sources */,
+				76E31DC12DFD879C00F2F856 /* MTLBuffer.m in Sources */,
+				76E31DC22DFD879C00F2F856 /* MTLTexture.m in Sources */,
 				1B81B273136CD811002AA257 /* GLConverter.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
