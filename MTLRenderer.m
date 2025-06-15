@@ -109,15 +109,26 @@
                    indexBuffer:(id<MTLBuffer>)indexBuffer
               backgroundTexture:(id<MTLTexture>)backgroundTexture
               reflectionTexture:(id<MTLTexture>)reflectionTexture {
+    if (!commandBuffer || !vertexBuffer || !normalBuffer || !indexBuffer || !backgroundTexture || !reflectionTexture) {
+        NSLog(@"Invalid render parameters");
+        return;
+    }
     
     // 创建渲染通道描述符
     MTLRenderPassDescriptor *renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+    renderPassDescriptor.colorAttachments[0].texture = backgroundTexture;
     renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
-    renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 1.0);
     renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
+    renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 1.0);
     
     // 创建渲染命令编码器
     id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
+    if (!renderEncoder) {
+        NSLog(@"Failed to create render command encoder");
+        return;
+    }
+    
+    // 设置渲染管线状态
     [renderEncoder setRenderPipelineState:self.renderPipelineState];
     
     // 设置顶点缓冲区
@@ -130,11 +141,12 @@
     
     // 绘制索引三角形
     [renderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle
-                             indexCount:[indexBuffer length] / sizeof(uint32_t)
+                             indexCount:indexBuffer.length / sizeof(uint32_t)
                               indexType:MTLIndexTypeUInt32
                             indexBuffer:indexBuffer
                       indexBufferOffset:0];
     
+    // 结束编码
     [renderEncoder endEncoding];
 }
 

@@ -242,114 +242,52 @@
 
 -(void)animateOneFrame
 {
-	int i;
-
-	[[self openGLContext] makeCurrentContext];
-
-	double dt=[self deltaTime];
-	t+=dt/t_div;
-
-	while(t>t_next)
-	{
-		float x0=RandomFloat()*wet.lx;
-		float y0=RandomFloat()*wet.ly;
-
-		WaterState drip1,drip2;
-		InitDripWaterState(&drip1,&wet,x0,y0,0.14,-0.01);
-		InitDripWaterState(&drip2,&wet,x0,y0,0.07,0.01);
-//		softdrip_state drip(0.5*wet->lx,0.5*wet->ly,wet);
-		AddWaterStateAtTime(&wet,&drip1,t_next);
-		AddWaterStateAtTime(&wet,&drip2,t_next);
-
-//		t_next+=0.3;
-		t_next+=(5-raintime)*exp(-t_next/10)+raintime;
-	}
-
-	CalculateWaterSurfaceAtTime(&wet,t);
-
-	float fade=[[self defaults] floatForKey:@"imageFade"];
-	if(![self isPreview]&&t<1) fade=1-(1-fade)*(t*t*(3-2*t));
-
-	i=0;
-	for(int y=0;y<wet.h;y++)
-	for(int x=0;x<wet.w;x++)
-	{
-		float u0=vert[i].x;
-		float v0=vert[i].y;
-
-		float n=1.333f;
-		float col_intensity=3.0f;
-
-		float d=wet.z[i]+waterdepth;
-		float n_abs2=vec3sq(wet.n[i]);
-		float cos_a=wet.n[i].z/sqrtf(n_abs2);
-		float sin_a=sqrtf(1.0f-cos_a*cos_a);
-		float sin_b=sin_a/n;
-		float cos_b=sqrtf(1.0f-sin_b*sin_b);
-		float sin_ab=sin_a*cos_b-cos_a*sin_b;
-		float dx=wet.n[i].x;
-		float dy=wet.n[i].y;
-		float r=sqrtf(dx*dx+dy*dy);
-
-		if(r>0.000001f)
-		{
-			tex[i].u=u0-dx/r*sin_ab*d/water_w;
-			tex[i].v=v0-dy/r*sin_ab*d/water_h;
-		}
-		else
-		{
-			tex[i].u=u0;
-			tex[i].v=v0;
-		}
-
-		float c=-(wet.n[i].x+wet.n[i].y)*col_intensity+1.0f;
-		if(c<0.0f) c=0.0f;
-		if(c>1.0f) c=1.0f;
-
-		col[i].r=col[i].g=col[i].b=(int)(c*fade*255.0f);
-
-		i++;
-	}
-
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	glShadeModel(GL_SMOOTH);
-	glDisable(GL_BLEND);
-
-	glTexCoordPointer(2,GL_FLOAT,sizeof(struct texcoord),tex);
-	glColorPointer(4,GL_UNSIGNED_BYTE,4,col);
-	glNormalPointer(GL_FLOAT,sizeof(vec3_t),wet.n); 
-	glVertexPointer(2,GL_FLOAT,sizeof(struct vertexcoord),vert); 
-
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glEnableClientState(GL_COLOR_ARRAY);
-	glEnableClientState(GL_NORMAL_ARRAY);
-	glEnableClientState(GL_VERTEX_ARRAY);
-
-	glLockArraysEXT(0,wet.w*wet.h);
-
-	i=0;
-	for(int y=0;y<wet.h-1;y++)
-	{
-		glBegin(GL_TRIANGLE_STRIP);
-		for(int x=0;x<wet.w;x++)
-		{
-			glArrayElement(i);
-			glArrayElement(i+wet.w);
-			i++;
-		}
-		glEnd();
-	}
-
-	glUnlockArraysEXT();
-
-	[[self openGLContext] flushBuffer];
-
-	[NSOpenGLContext clearCurrentContext];
-
-    // 使用 Metal 渲染
+    // 更新水波纹状态
     [self updateMetalBuffers];
-    [self renderWithMetal];
+    
+    // 获取当前可绘制对象
+    id<CAMetalDrawable> drawable = [_metalView currentDrawable];
+    if (!drawable) {
+        return;
+    }
+    
+    // 创建命令缓冲区
+    id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
+    
+    // 更新水波纹
+    [_computeManager computeWaterSurfaceWithCurrentBuffer:_heightBuffer
+                                          previousBuffer:_heightBuffer
+                                              nextBuffer:_heightBuffer
+                                                   width:tex_w
+                                                  height:tex_h
+                                                   time:_time
+                                                  depth:_waterDepth
+                                                damping:_damping
+                                                  speed:_waveSpeed
+                                           commandBuffer:commandBuffer];
+    
+    // 更新法线
+    [_computeManager computeNormalsWithHeightBuffer:_heightBuffer
+                                     normalBuffer:_normalBuffer
+                                           width:tex_w
+                                          height:tex_h
+                                          scale:1.0f
+                                    commandBuffer:commandBuffer];
+    
+    // 渲染水波纹
+    [_metalRenderer renderWithCommandBuffer:commandBuffer
+                              vertexBuffer:_vertexBuffer
+                              normalBuffer:_normalBuffer
+                              indexBuffer:_indexBuffer
+                        backgroundTexture:_backgroundTexture
+                        reflectionTexture:_reflectionTexture];
+    
+    // 提交命令
+    [commandBuffer commit];
+    
+    // 更新时间
+    _time = _nextTime;
+    _nextTime += _timeStep;
 }
 
 -(void)updateConfigWindow:(NSWindow *)window usingDefaults:(ScreenSaverDefaults *)defaults
@@ -425,6 +363,13 @@
     // 创建命令队列
     _commandQueue = [_device newCommandQueue];
     
+    // 初始化渲染器
+    _metalRenderer = [[MTLRenderer alloc] init];
+    if (!_metalRenderer) {
+        NSLog(@"Failed to create Metal renderer");
+        return;
+    }
+    
     // 初始化管理器
     _shaderManager = [[MTLShaderManager alloc] initWithDevice:_device];
     _bufferManager = [[MTLBufferManager alloc] initWithDevice:_device];
@@ -463,6 +408,19 @@
             indices[index++] = bottomRight;
         }
     }
+    
+    // 创建纹理描述符
+    MTLTextureDescriptor *textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm
+                                                                                                width:tex_w
+                                                                                               height:tex_h
+                                                                                            mipmapped:NO];
+    textureDescriptor.usage = MTLTextureUsageShaderRead | MTLTextureUsageShaderWrite;
+    
+    // 创建背景纹理
+    _backgroundTexture = [_device newTextureWithDescriptor:textureDescriptor];
+    
+    // 创建反射纹理
+    _reflectionTexture = [_device newTextureWithDescriptor:textureDescriptor];
     
     // 初始化水波纹参数
     _time = 0.0f;
