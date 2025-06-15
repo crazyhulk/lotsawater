@@ -353,7 +353,7 @@
 }
 
 - (void)setupMetal {
-    // 获取默认设备
+    // 获取默认的 Metal 设备
     _device = MTLCreateSystemDefaultDevice();
     if (!_device) {
         NSLog(@"Metal is not supported on this device");
@@ -363,120 +363,152 @@
     // 创建命令队列
     _commandQueue = [_device newCommandQueue];
     
-    // 初始化渲染器
+    // 初始化 Metal 渲染器
     _metalRenderer = [[MTLRenderer alloc] init];
     if (!_metalRenderer) {
         NSLog(@"Failed to create Metal renderer");
         return;
     }
     
-    // 初始化管理器
+    // 初始化着色器管理器
     _shaderManager = [[MTLShaderManager alloc] initWithDevice:_device];
-    _bufferManager = [[MTLBufferManager alloc] initWithDevice:_device];
-    _computeManager = [[MTLComputePipelineManager alloc] initWithDevice:_device];
+    if (!_shaderManager) {
+        NSLog(@"Failed to create shader manager");
+        return;
+    }
     
-    // 创建缓冲区
-    size_t bufferSize = tex_w * tex_h * sizeof(float);
-    _heightBuffer = [_device newBufferWithLength:bufferSize options:MTLResourceStorageModeShared];
-    _normalBuffer = [_device newBufferWithLength:bufferSize * sizeof(simd_float3) options:MTLResourceStorageModeShared];
+    // 初始化缓冲区管理器
+    _bufferManager = [[MTLBufferManager alloc] initWithDevice:_device];
+    if (!_bufferManager) {
+        NSLog(@"Failed to create buffer manager");
+        return;
+    }
+    
+    // 初始化计算管线管理器
+    _computeManager = [[MTLComputePipelineManager alloc] initWithDevice:_device];
+    if (!_computeManager) {
+        NSLog(@"Failed to create compute pipeline manager");
+        return;
+    }
+    
+    // 创建高度缓冲区
+    _heightBuffer = [_bufferManager createHeightBufferWithWidth:wet.w height:wet.h];
+    if (!_heightBuffer) {
+        NSLog(@"Failed to create height buffer");
+        return;
+    }
+    
+    // 创建法线缓冲区
+    _normalBuffer = [_bufferManager createNormalBufferWithWidth:wet.w height:wet.h];
+    if (!_normalBuffer) {
+        NSLog(@"Failed to create normal buffer");
+        return;
+    }
     
     // 创建顶点缓冲区
-    size_t vertexCount = tex_w * tex_h;
-    size_t vertexBufferSize = vertexCount * sizeof(simd_float4);
-    _vertexBuffer = [_device newBufferWithLength:vertexBufferSize options:MTLResourceStorageModeShared];
+    _vertexBuffer = [_bufferManager createVertexBufferWithVertices:NULL
+                                                            count:wet.w * wet.h
+                                                           stride:sizeof(float) * 3];
+    if (!_vertexBuffer) {
+        NSLog(@"Failed to create vertex buffer");
+        return;
+    }
     
     // 创建索引缓冲区
-    size_t indexCount = (tex_w - 1) * (tex_h - 1) * 6;
-    size_t indexBufferSize = indexCount * sizeof(uint32_t);
-    _indexBuffer = [_device newBufferWithLength:indexBufferSize options:MTLResourceStorageModeShared];
+    NSInteger indexCount = (wet.w - 1) * (wet.h - 1) * 6;
+    uint32_t *indices = (uint32_t *)malloc(indexCount * sizeof(uint32_t));
+    if (!indices) {
+        NSLog(@"Failed to allocate indices");
+        return;
+    }
     
-    // 初始化索引
-    uint32_t *indices = (uint32_t *)_indexBuffer.contents;
-    int index = 0;
-    for (int y = 0; y < tex_h - 1; y++) {
-        for (int x = 0; x < tex_w - 1; x++) {
-            uint32_t topLeft = y * tex_w + x;
-            uint32_t topRight = topLeft + 1;
-            uint32_t bottomLeft = (y + 1) * tex_w + x;
-            uint32_t bottomRight = bottomLeft + 1;
-            
-            indices[index++] = topLeft;
-            indices[index++] = bottomLeft;
-            indices[index++] = topRight;
-            indices[index++] = topRight;
-            indices[index++] = bottomLeft;
-            indices[index++] = bottomRight;
+    // 生成索引
+    NSInteger idx = 0;
+    for (int y = 0; y < wet.h - 1; y++) {
+        for (int x = 0; x < wet.w - 1; x++) {
+            uint32_t base = y * wet.w + x;
+            indices[idx++] = base;
+            indices[idx++] = base + 1;
+            indices[idx++] = base + wet.w;
+            indices[idx++] = base + 1;
+            indices[idx++] = base + wet.w + 1;
+            indices[idx++] = base + wet.w;
         }
     }
     
-    // 创建纹理描述符
-    MTLTextureDescriptor *textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm
-                                                                                                width:tex_w
-                                                                                               height:tex_h
-                                                                                            mipmapped:NO];
-    textureDescriptor.usage = MTLTextureUsageShaderRead | MTLTextureUsageShaderWrite;
+    _indexBuffer = [_bufferManager createIndexBufferWithIndices:indices
+                                                         count:indexCount
+                                                        format:MTLIndexTypeUInt32];
+    free(indices);
+    
+    if (!_indexBuffer) {
+        NSLog(@"Failed to create index buffer");
+        return;
+    }
     
     // 创建背景纹理
-    _backgroundTexture = [_device newTextureWithDescriptor:textureDescriptor];
+    MTLTextureDescriptor *backgroundDesc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm
+                                                                                              width:wet.w
+                                                                                             height:wet.h
+                                                                                          mipmapped:NO];
+    backgroundDesc.usage = MTLTextureUsageShaderRead | MTLTextureUsageShaderWrite;
+    _backgroundTexture = [_device newTextureWithDescriptor:backgroundDesc];
     
     // 创建反射纹理
-    _reflectionTexture = [_device newTextureWithDescriptor:textureDescriptor];
+    MTLTextureDescriptor *reflectionDesc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm
+                                                                                               width:wet.w
+                                                                                              height:wet.h
+                                                                                           mipmapped:NO];
+    reflectionDesc.usage = MTLTextureUsageShaderRead | MTLTextureUsageShaderWrite;
+    _reflectionTexture = [_device newTextureWithDescriptor:reflectionDesc];
     
     // 初始化水波纹参数
-    _time = 0.0f;
-    _nextTime = 0.0f;
-    _timeStep = 1.0f / 60.0f;
-    _waterDepth = waterdepth;
-    _damping = 0.99f;
-    _waveSpeed = 0.1f;
+    _time = 0.0;
+    _nextTime = 0.0;
+    _timeStep = 1.0 / 60.0;  // 60 FPS
+    _waterDepth = 0.1;
+    _damping = 0.98;
+    _waveSpeed = 1.0;
+    
+    // 更新纹理
+    [self updateBackgroundTexture];
+    [self updateReflectionTexture];
 }
 
 - (void)updateMetalBuffers {
-    // 计算水波纹表面
-    [self calculateWaterSurface];
+    if (!_heightBuffer || !_normalBuffer || !_vertexBuffer) {
+        return;
+    }
     
     // 更新高度缓冲区
-    float *heights = (float *)_heightBuffer.contents;
-    for (int y = 0; y < tex_h; y++) {
-        for (int x = 0; x < tex_w; x++) {
-            heights[y * tex_w + x] = wet.z[y * tex_w + x];
+    float *heights = (float *)[_heightBuffer contents];
+    for (int y = 0; y < wet.h; y++) {
+        for (int x = 0; x < wet.w; x++) {
+            heights[y * wet.w + x] = wet.z[y * wet.w + x];
         }
     }
     
-    // 计算法线
-    id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
-    [_computeManager computeNormalsWithHeightBuffer:_heightBuffer
-                                     normalBuffer:_normalBuffer
-                                           width:tex_w
-                                          height:tex_h
-                                          scale:1.0f
-                                    commandBuffer:commandBuffer];
-    [commandBuffer commit];
+    // 更新法线缓冲区
+    float *normals = (float *)[_normalBuffer contents];
+    for (int y = 0; y < wet.h; y++) {
+        for (int x = 0; x < wet.w; x++) {
+            int idx = (y * wet.w + x) * 3;
+            normals[idx] = wet.n[y * wet.w + x].x;
+            normals[idx + 1] = wet.n[y * wet.w + x].y;
+            normals[idx + 2] = wet.n[y * wet.w + x].z;
+        }
+    }
     
     // 更新顶点缓冲区
-    simd_float4 *vertices = (simd_float4 *)_vertexBuffer.contents;
-    simd_float3 *normals = (simd_float3 *)_normalBuffer.contents;
-    
-    for (int y = 0; y < tex_h; y++) {
-        for (int x = 0; x < tex_w; x++) {
-            int index = y * tex_w + x;
-            float nx = (float)x / (tex_w - 1);
-            float ny = (float)y / (tex_h - 1);
-            
-            vertices[index] = simd_make_float4(
-                nx * 2.0f - 1.0f,
-                ny * 2.0f - 1.0f,
-                heights[index],
-                1.0f
-            );
+    float *vertices = (float *)[_vertexBuffer contents];
+    for (int y = 0; y < wet.h; y++) {
+        for (int x = 0; x < wet.w; x++) {
+            int idx = (y * wet.w + x) * 3;
+            vertices[idx] = x * wet.lx / (wet.w - 1);
+            vertices[idx + 1] = y * wet.ly / (wet.h - 1);
+            vertices[idx + 2] = wet.z[y * wet.w + x];
         }
     }
-    
-    // 更新背景纹理
-    [self updateBackgroundTexture];
-    
-    // 更新反射纹理
-    [self updateReflectionTexture];
 }
 
 - (void)renderWithMetal {
@@ -544,6 +576,101 @@
     
     // 提交命令
     [commandBuffer commit];
+}
+
+- (void)updateBackgroundTexture {
+    if (!_backgroundTexture || !screenshot) {
+        return;
+    }
+    
+    // 获取图像数据
+    NSBitmapImageRep *imageRep = screenshot;
+    NSInteger width = [imageRep pixelsWide];
+    NSInteger height = [imageRep pixelsHigh];
+    NSInteger bytesPerRow = [imageRep bytesPerRow];
+    NSInteger bitsPerPixel = [imageRep bitsPerPixel];
+    
+    // 创建纹理描述符
+    MTLTextureDescriptor *textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm
+                                                                                                width:width
+                                                                                               height:height
+                                                                                            mipmapped:NO];
+    textureDescriptor.usage = MTLTextureUsageShaderRead | MTLTextureUsageShaderWrite;
+    
+    // 创建新纹理
+    id<MTLTexture> newTexture = [_device newTextureWithDescriptor:textureDescriptor];
+    
+    // 复制图像数据到纹理
+    [newTexture replaceRegion:MTLRegionMake2D(0, 0, width, height)
+                 mipmapLevel:0
+                   withBytes:[imageRep bitmapData]
+                 bytesPerRow:bytesPerRow];
+    
+    // 更新背景纹理
+    _backgroundTexture = newTexture;
+}
+
+- (void)updateReflectionTexture {
+    if (!_reflectionTexture) {
+        return;
+    }
+    
+    // 加载反射图像
+    NSImage *reflectionImage = [NSImage imageNamed:@"reflections"];
+    if (!reflectionImage) {
+        NSLog(@"Failed to load reflection image");
+        return;
+    }
+    
+    // 获取图像数据
+    NSBitmapImageRep *imageRep = [[NSBitmapImageRep alloc] initWithData:[reflectionImage TIFFRepresentation]];
+    NSInteger width = [imageRep pixelsWide];
+    NSInteger height = [imageRep pixelsHigh];
+    NSInteger bytesPerRow = [imageRep bytesPerRow];
+    NSInteger bitsPerPixel = [imageRep bitsPerPixel];
+    
+    // 创建纹理描述符
+    MTLTextureDescriptor *textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm
+                                                                                                width:width
+                                                                                               height:height
+                                                                                            mipmapped:NO];
+    textureDescriptor.usage = MTLTextureUsageShaderRead | MTLTextureUsageShaderWrite;
+    
+    // 创建新纹理
+    id<MTLTexture> newTexture = [_device newTextureWithDescriptor:textureDescriptor];
+    
+    // 复制图像数据到纹理
+    [newTexture replaceRegion:MTLRegionMake2D(0, 0, width, height)
+                 mipmapLevel:0
+                   withBytes:[imageRep bitmapData]
+                 bytesPerRow:bytesPerRow];
+    
+    // 更新反射纹理
+    _reflectionTexture = newTexture;
+}
+
+- (void)calculateWaterSurface {
+    // 计算水波纹表面
+    double dt = [self deltaTime];
+    _time += dt / _timeStep;
+    
+    while (_time > _nextTime) {
+        // 添加随机水滴
+        float x0 = RandomFloat() * wet.lx;
+        float y0 = RandomFloat() * wet.ly;
+        
+        WaterState drip1, drip2;
+        InitDripWaterState(&drip1, &wet, x0, y0, 0.14, -0.01);
+        InitDripWaterState(&drip2, &wet, x0, y0, 0.07, 0.01);
+        
+        AddWaterStateAtTime(&wet, &drip1, _nextTime);
+        AddWaterStateAtTime(&wet, &drip2, _nextTime);
+        
+        _nextTime += (5 - raintime) * exp(-_nextTime / 10) + raintime;
+    }
+    
+    // 计算当前时间的水波纹表面
+    CalculateWaterSurfaceAtTime(&wet, _time);
 }
 
 @end
