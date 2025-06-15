@@ -2,9 +2,17 @@
 
 #import "LotsaCore/LotsaView.h"
 #import "Water.h"
+#import "WaterTypes.h"
+#import "MTLRenderer.h"
+#import "MTLBuffer.h"
+#import "MTLTexture.h"
+#import "MTLRenderPipeline.h"
+#import "MTLComputePipeline.h"
 
 #import <OpenGL/gl.h>
 #import <OpenGL/glu.h>
+#import <Metal/Metal.h>
+#import <MetalKit/MetalKit.h>
 
 #import "LotsaCore/NameMangler.h"
 #define LotsaWaterView MangleClassName(LotsaWaterView)
@@ -14,6 +22,7 @@
 
 @interface LotsaWaterView:LotsaView
 {
+	// OpenGL 相关
 	NSBitmapImageRep *screenshot;
 
 	GLuint backtex,refltex;
@@ -29,6 +38,22 @@
 	struct color { GLubyte r,g,b,a; } *col;
 	struct vertexcoord { float x,y; } *vert;
 
+	// Metal 相关
+	MTLRenderer *_metalRenderer;
+	MTLBuffer *_vertexBuffer;
+	MTLBuffer *_indexBuffer;
+	MTLTexture *_reflectionTexture;
+	MTLRenderPipeline *_renderPipeline;
+	MTLComputePipeline *_waterComputePipeline;
+	MTLComputePipeline *_dropComputePipeline;
+	MTLBuffer *_waterParamsBuffer;
+	MTLBuffer *_waterStateBuffer;
+	MTLBuffer *_heightBuffer;
+	MTLBuffer *_normalBuffer;
+	id<MTLCommandBuffer> _currentCommandBuffer;
+	id<CAMetalDrawable> _currentDrawable;
+
+	// 共享属性
 	IBOutlet NSSlider *detail;
 	IBOutlet NSSlider *accuracy;
 	IBOutlet NSSlider *slomo;
@@ -54,9 +79,14 @@
 
 +(BOOL)performGammaFade;
 
+// Metal 相关方法
+- (void)setupMetal;
+- (void)renderWithMetal;
+- (void)updateMetalBuffers;
+- (void)calculateWaterSurface;
+- (void)addWaterDropAtX:(float)x y:(float)y depth:(float)d amplitude:(float)ampl;
+
 @end
-
-
 
 @interface LWImagePicker:NSImageView
 {

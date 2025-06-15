@@ -9,6 +9,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) id<MTLDevice> device;
 @property (nonatomic, readonly) id<MTLCommandQueue> commandQueue;
 @property (nonatomic, readonly) id<MTLLibrary> defaultLibrary;
+@property (nonatomic, readonly) id<MTLCommandBuffer> currentCommandBuffer;
 
 - (instancetype)init;
 - (BOOL)setupMetal;
