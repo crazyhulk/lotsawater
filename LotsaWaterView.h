@@ -8,6 +8,7 @@
 #import "MTLTexture.h"
 #import "MTLRenderPipeline.h"
 #import "MTLComputePipeline.h"
+#import "MTLView.h"
 
 #import <OpenGL/gl.h>
 #import <OpenGL/glu.h>
@@ -39,10 +40,12 @@
 	struct vertexcoord { float x,y; } *vert;
 
 	// Metal 相关
+	MTLView *_metalView;
 	MTLRenderer *_metalRenderer;
 	MTLBuffer *_vertexBuffer;
 	MTLBuffer *_indexBuffer;
 	MTLTexture *_reflectionTexture;
+	MTLTexture *_backgroundTexture;
 	MTLRenderPipeline *_renderPipeline;
 	MTLComputePipeline *_waterComputePipeline;
 	MTLComputePipeline *_dropComputePipeline;
@@ -85,6 +88,7 @@
 - (void)updateMetalBuffers;
 - (void)calculateWaterSurface;
 - (void)addWaterDropAtX:(float)x y:(float)y depth:(float)d amplitude:(float)ampl;
+- (void)updateReflectionTexture;
 
 @end
 

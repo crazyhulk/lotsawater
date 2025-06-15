@@ -34,6 +34,10 @@
 		screenshot=nil;
     }
 
+    // 创建 Metal 视图
+    _metalView = [[MTLView alloc] initWithFrame:self.bounds];
+    [self addSubview:_metalView];
+    
     // 初始化 OpenGL 相关资源
     [self setupOpenGL];
     
@@ -49,10 +53,12 @@
 //	[super dealloc];
 
     // 清理 Metal 资源
+    _metalView = nil;
     _metalRenderer = nil;
     _vertexBuffer = nil;
     _indexBuffer = nil;
     _reflectionTexture = nil;
+    _backgroundTexture = nil;
     _renderPipeline = nil;
     _waterComputePipeline = nil;
     _dropComputePipeline = nil;
@@ -442,6 +448,12 @@
                                                     height:tex_h
                                                pixelFormat:MTLPixelFormatBGRA8Unorm];
     
+    // 创建背景纹理
+    _backgroundTexture = [[MTLTexture alloc] initWithDevice:_metalRenderer.device
+                                                     width:tex_w
+                                                    height:tex_h
+                                               pixelFormat:MTLPixelFormatBGRA8Unorm];
+    
     // 创建渲染管线
     id<MTLFunction> vertexFunction = [_metalRenderer.defaultLibrary newFunctionWithName:@"waterVertexShader"];
     id<MTLFunction> fragmentFunction = [_metalRenderer.defaultLibrary newFunctionWithName:@"waterFragmentShader"];
@@ -542,6 +554,100 @@
                                        buffers:@[_waterParamsBuffer, _heightBuffer, dropParamsBuffer]];
 }
 
+- (void)updateReflectionTexture {
+    if (!_reflectionTexture || !_backgroundTexture) {
+        return;
+    }
+    
+    // 获取当前可绘制对象
+    _currentDrawable = [_metalView currentDrawable];
+    if (!_currentDrawable) {
+        return;
+    }
+    
+    // 开始新的渲染帧
+    [_metalRenderer beginFrame];
+    
+    // 创建渲染通道描述符
+    MTLRenderPassDescriptor *renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+    renderPassDescriptor.colorAttachments[0].texture = _reflectionTexture.texture;
+    renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
+    renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 1.0);
+    
+    // 获取渲染命令编码器
+    id<MTLRenderCommandEncoder> renderEncoder = [_renderPipeline renderCommandEncoderWithCommandBuffer:_metalRenderer.currentCommandBuffer
+                                                                                   renderPassDescriptor:renderPassDescriptor];
+    
+    // 设置顶点缓冲区
+    [renderEncoder setVertexBuffer:_vertexBuffer.buffer offset:0 atIndex:0];
+    
+    // 设置片段纹理
+    [renderEncoder setFragmentTexture:_backgroundTexture.texture atIndex:0];
+    
+    // 绘制
+    [renderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle
+                              indexCount:6
+                               indexType:MTLIndexTypeUInt16
+                             indexBuffer:_indexBuffer.buffer
+                       indexBufferOffset:0];
+    
+    // 结束编码
+    [renderEncoder endEncoding];
+    
+    // 提交命令缓冲区
+    [_metalRenderer endFrame];
+}
+
+- (void)updateBackgroundTexture {
+    if (!_backgroundTexture || !screenshot) {
+        return;
+    }
+    
+    // 获取图片数据
+    NSBitmapImageRep *bitmap = screenshot;
+    if (!bitmap) {
+        return;
+    }
+    
+    // 创建位图上下文
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    size_t bytesPerRow = bitmap.pixelsWide * 4;
+    void *imageData = malloc(bytesPerRow * bitmap.pixelsHigh);
+    
+    CGContextRef context = CGBitmapContextCreate(imageData,
+                                               bitmap.pixelsWide,
+                                               bitmap.pixelsHigh,
+                                               8,
+                                               bytesPerRow,
+                                               colorSpace,
+                                               kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+    
+    if (!context) {
+        free(imageData);
+        CGColorSpaceRelease(colorSpace);
+        return;
+    }
+    
+    // 绘制图片到位图上下文
+    NSGraphicsContext *nsContext = [NSGraphicsContext graphicsContextWithCGContext:context flipped:NO];
+    [NSGraphicsContext saveGraphicsState];
+    [NSGraphicsContext setCurrentContext:nsContext];
+    [bitmap drawInRect:NSMakeRect(0, 0, bitmap.pixelsWide, bitmap.pixelsHigh)];
+    [NSGraphicsContext restoreGraphicsState];
+    
+    // 更新纹理
+    MTLRegion region = MTLRegionMake2D(0, 0, bitmap.pixelsWide, bitmap.pixelsHigh);
+    [_backgroundTexture replaceRegion:region
+                         mipmapLevel:0
+                           withBytes:imageData
+                         bytesPerRow:bytesPerRow];
+    
+    // 清理
+    CGContextRelease(context);
+    free(imageData);
+    CGColorSpaceRelease(colorSpace);
+}
+
 - (void)updateMetalBuffers {
     // 计算水波纹表面
     [self calculateWaterSurface];
@@ -558,21 +664,29 @@
                 int index = y * tex_w + x;
                 int vertexIndex = index * 4; // 每个顶点4个float
                 
+                // 计算归一化坐标
+                float nx = (float)x / (tex_w - 1);
+                float ny = (float)y / (tex_h - 1);
+                
                 // 更新顶点位置
-                vertices[vertexIndex + 2] = heights[index]; // z坐标
+                vertices[vertexIndex] = nx * 2.0f - 1.0f;     // x
+                vertices[vertexIndex + 1] = ny * 2.0f - 1.0f; // y
+                vertices[vertexIndex + 2] = heights[index];   // z
+                vertices[vertexIndex + 3] = 1.0f;             // w
                 
                 // 更新法线
                 vector_float3 normal = normals[index];
-                // 这里可以根据需要更新其他顶点属性
+                // 存储法线到额外的缓冲区或顶点属性中
+                // 这里可以根据需要添加法线缓冲区
             }
         }
     }
     
+    // 更新背景纹理
+    [self updateBackgroundTexture];
+    
     // 更新反射纹理
-    if (_reflectionTexture) {
-        // 根据水波纹效果更新反射纹理
-        // ... 实现反射纹理更新逻辑 ...
-    }
+    [self updateReflectionTexture];
 }
 
 - (void)renderWithMetal {
