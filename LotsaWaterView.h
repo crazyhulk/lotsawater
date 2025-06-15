@@ -9,6 +9,12 @@
 #import "MTLRenderPipeline.h"
 #import "MTLComputePipeline.h"
 #import "MTLView.h"
+#import <ScreenSaver/ScreenSaver.h>
+#import <Metal/Metal.h>
+#import <MetalKit/MetalKit.h>
+#import "MTLShaderManager.h"
+#import "MTLBufferManager.h"
+#import "MTLComputePipelineManager.h"
 
 #import <OpenGL/gl.h>
 #import <OpenGL/glu.h>
@@ -21,7 +27,8 @@
 
 @class ImagePicker;
 
-@interface LotsaWaterView:LotsaView
+//@interface LotsaWaterView:ScreenSaverView
+@interface LotsaWaterView: LotsaView
 {
 	// OpenGL 相关
 	NSBitmapImageRep *screenshot;
@@ -65,6 +72,21 @@
 	IBOutlet NSSlider *imagefade;
 	IBOutlet NSPopUpButton *imgsrc;
 	IBOutlet LWImagePicker *imageview;
+
+	// Metal 相关
+	id<MTLDevice> _device;
+	id<MTLCommandQueue> _commandQueue;
+	MTLShaderManager *_shaderManager;
+	MTLBufferManager *_bufferManager;
+	MTLComputePipelineManager *_computeManager;
+
+	// 水波纹参数
+	float _time;
+	float _nextTime;
+	float _timeStep;
+	float _waterDepth;
+	float _damping;
+	float _waveSpeed;
 }
 
 -(id)initWithFrame:(NSRect)frame isPreview:(BOOL)preview;
@@ -89,6 +111,7 @@
 - (void)calculateWaterSurface;
 - (void)addWaterDropAtX:(float)x y:(float)y depth:(float)d amplitude:(float)ampl;
 - (void)updateReflectionTexture;
+- (void)updateBackgroundTexture;
 
 @end
 

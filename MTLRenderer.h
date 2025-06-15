@@ -26,6 +26,14 @@ NS_ASSUME_NONNULL_BEGIN
                               options:(MTLResourceOptions)options;
 - (id<MTLTexture>)createTextureWithDescriptor:(MTLTextureDescriptor *)descriptor;
 
+// 水波纹渲染方法
+- (void)renderWithCommandBuffer:(id<MTLCommandBuffer>)commandBuffer
+                   vertexBuffer:(id<MTLBuffer>)vertexBuffer
+                  normalBuffer:(id<MTLBuffer>)normalBuffer
+                   indexBuffer:(id<MTLBuffer>)indexBuffer
+              backgroundTexture:(id<MTLTexture>)backgroundTexture
+              reflectionTexture:(id<MTLTexture>)reflectionTexture;
+
 @end
 
 NS_ASSUME_NONNULL_END 

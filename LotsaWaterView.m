@@ -415,270 +415,102 @@
 }
 
 - (void)setupMetal {
-    // 创建 Metal 渲染器
-    _metalRenderer = [[MTLRenderer alloc] init];
-    if (!_metalRenderer) {
-        NSLog(@"Failed to create Metal renderer");
+    // 获取默认设备
+    _device = MTLCreateSystemDefaultDevice();
+    if (!_device) {
+        NSLog(@"Metal is not supported on this device");
         return;
     }
+    
+    // 创建命令队列
+    _commandQueue = [_device newCommandQueue];
+    
+    // 初始化管理器
+    _shaderManager = [[MTLShaderManager alloc] initWithDevice:_device];
+    _bufferManager = [[MTLBufferManager alloc] initWithDevice:_device];
+    _computeManager = [[MTLComputePipelineManager alloc] initWithDevice:_device];
+    
+    // 创建缓冲区
+    size_t bufferSize = tex_w * tex_h * sizeof(float);
+    _heightBuffer = [_device newBufferWithLength:bufferSize options:MTLResourceStorageModeShared];
+    _normalBuffer = [_device newBufferWithLength:bufferSize * sizeof(simd_float3) options:MTLResourceStorageModeShared];
     
     // 创建顶点缓冲区
-    float vertices[] = {
-        -1.0f, -1.0f, 0.0f, 0.0f,
-         1.0f, -1.0f, 1.0f, 0.0f,
-         1.0f,  1.0f, 1.0f, 1.0f,
-        -1.0f,  1.0f, 0.0f, 1.0f
-    };
-    
-    _vertexBuffer = [[MTLBuffer alloc] initWithDevice:_metalRenderer.device
-                                               bytes:vertices
-                                              length:sizeof(vertices)
-                                             options:MTLResourceStorageModeShared];
+    size_t vertexCount = tex_w * tex_h;
+    size_t vertexBufferSize = vertexCount * sizeof(simd_float4);
+    _vertexBuffer = [_device newBufferWithLength:vertexBufferSize options:MTLResourceStorageModeShared];
     
     // 创建索引缓冲区
-    uint16_t indices[] = { 0, 1, 2, 2, 3, 0 };
-    _indexBuffer = [[MTLBuffer alloc] initWithDevice:_metalRenderer.device
-                                             bytes:indices
-                                            length:sizeof(indices)
-                                           options:MTLResourceStorageModeShared];
+    size_t indexCount = (tex_w - 1) * (tex_h - 1) * 6;
+    size_t indexBufferSize = indexCount * sizeof(uint32_t);
+    _indexBuffer = [_device newBufferWithLength:indexBufferSize options:MTLResourceStorageModeShared];
     
-    // 创建反射纹理
-    _reflectionTexture = [[MTLTexture alloc] initWithDevice:_metalRenderer.device
-                                                     width:tex_w
-                                                    height:tex_h
-                                               pixelFormat:MTLPixelFormatBGRA8Unorm];
-    
-    // 创建背景纹理
-    _backgroundTexture = [[MTLTexture alloc] initWithDevice:_metalRenderer.device
-                                                     width:tex_w
-                                                    height:tex_h
-                                               pixelFormat:MTLPixelFormatBGRA8Unorm];
-    
-    // 创建渲染管线
-    id<MTLFunction> vertexFunction = [_metalRenderer.defaultLibrary newFunctionWithName:@"waterVertexShader"];
-    id<MTLFunction> fragmentFunction = [_metalRenderer.defaultLibrary newFunctionWithName:@"waterFragmentShader"];
-    
-    _renderPipeline = [[MTLRenderPipeline alloc] initWithDevice:_metalRenderer.device
-                                                vertexFunction:vertexFunction
-                                              fragmentFunction:fragmentFunction
-                                                   pixelFormat:MTLPixelFormatBGRA8Unorm];
-    
-    // 创建计算管线
-    id<MTLFunction> waterComputeFunction = [_metalRenderer.defaultLibrary newFunctionWithName:@"calculateWaterSurface"];
-    id<MTLFunction> dropComputeFunction = [_metalRenderer.defaultLibrary newFunctionWithName:@"addWaterDrop"];
-    
-    _waterComputePipeline = [[MTLComputePipeline alloc] initWithDevice:_metalRenderer.device
-                                                      computeFunction:waterComputeFunction];
-    _dropComputePipeline = [[MTLComputePipeline alloc] initWithDevice:_metalRenderer.device
-                                                     computeFunction:dropComputeFunction];
-    
-    // 创建水波纹参数缓冲区
-    _waterParamsBuffer = [[MTLBuffer alloc] initWithDevice:_metalRenderer.device
-                                                   length:sizeof(MetalWaterParams)
-                                                  options:MTLResourceStorageModeShared];
-    
-    // 创建水波纹状态缓冲区
-    _waterStateBuffer = [[MTLBuffer alloc] initWithDevice:_metalRenderer.device
-                                                  length:sizeof(MetalWaterState)
-                                                 options:MTLResourceStorageModeShared];
-    
-    // 创建高度和法线缓冲区
-    _heightBuffer = [[MTLBuffer alloc] initWithDevice:_metalRenderer.device
-                                              length:tex_w * tex_h * sizeof(float)
-                                             options:MTLResourceStorageModeShared];
-    
-    _normalBuffer = [[MTLBuffer alloc] initWithDevice:_metalRenderer.device
-                                              length:tex_w * tex_h * sizeof(vector_float3)
-                                             options:MTLResourceStorageModeShared];
-    
-    // 配置深度测试
-    [_renderPipeline configureDepthStencilStateWithDevice:_metalRenderer.device
-                                         depthWriteEnabled:NO
-                                      depthCompareFunction:MTLCompareFunctionAlways];
-}
-
-- (void)calculateWaterSurface {
-    if (!_waterComputePipeline || !_metalRenderer.currentCommandBuffer) {
-        return;
+    // 初始化索引
+    uint32_t *indices = (uint32_t *)_indexBuffer.contents;
+    int index = 0;
+    for (int y = 0; y < tex_h - 1; y++) {
+        for (int x = 0; x < tex_w - 1; x++) {
+            uint32_t topLeft = y * tex_w + x;
+            uint32_t topRight = topLeft + 1;
+            uint32_t bottomLeft = (y + 1) * tex_w + x;
+            uint32_t bottomRight = bottomLeft + 1;
+            
+            indices[index++] = topLeft;
+            indices[index++] = bottomLeft;
+            indices[index++] = topRight;
+            indices[index++] = topRight;
+            indices[index++] = bottomLeft;
+            indices[index++] = bottomRight;
+        }
     }
     
-    // 更新水波纹参数
-    MetalWaterParams *params = (MetalWaterParams *)_waterParamsBuffer.contents;
-    params->w = tex_w;
-    params->h = tex_h;
-    params->max_p = wet.max_p;
-    params->max_q = wet.max_q;
-    params->v = wet.v;
-    params->b = wet.b;
-    params->lx = wet.lx;
-    params->ly = wet.ly;
-    params->t0 = wet.t0;
-    params->wpq = (float *)wet.wpq;
-    params->ampl = (float *)wet.ampl;
-    params->sin_px = (float *)wet.sin_px;
-    params->sin_qy = (float *)wet.sin_qy;
-    params->cos_px = (float *)wet.cos_px;
-    params->cos_qy = (float *)wet.cos_qy;
-    params->z = (float *)_heightBuffer.contents;
-    params->n = (vector_float3 *)_normalBuffer.contents;
-    
-    // 执行计算
-    MTLSize gridSize = MTLSizeMake(tex_w, tex_h, 1);
-    MTLSize threadSize = MTLSizeMake(16, 16, 1);
-    
-    [_waterComputePipeline computeWithCommandBuffer:_metalRenderer.currentCommandBuffer
-                                         gridSize:gridSize
-                                       threadSize:threadSize
-                                        buffers:@[_waterParamsBuffer, _heightBuffer, _normalBuffer]];
-}
-
-- (void)addWaterDropAtX:(float)x y:(float)y depth:(float)d amplitude:(float)ampl {
-    if (!_dropComputePipeline || !_metalRenderer.currentCommandBuffer) {
-        return;
-    }
-    
-    // 创建水滴参数缓冲区
-    vector_float4 dropParams = {x, y, d, ampl};
-    MTLBuffer *dropParamsBuffer = [[MTLBuffer alloc] initWithDevice:_metalRenderer.device
-                                                            bytes:&dropParams
-                                                           length:sizeof(dropParams)
-                                                          options:MTLResourceStorageModeShared];
-    
-    // 执行计算
-    MTLSize gridSize = MTLSizeMake(tex_w, tex_h, 1);
-    MTLSize threadSize = MTLSizeMake(16, 16, 1);
-    
-    [_dropComputePipeline computeWithCommandBuffer:_metalRenderer.currentCommandBuffer
-                                        gridSize:gridSize
-                                      threadSize:threadSize
-                                       buffers:@[_waterParamsBuffer, _heightBuffer, dropParamsBuffer]];
-}
-
-- (void)updateReflectionTexture {
-    if (!_reflectionTexture || !_backgroundTexture) {
-        return;
-    }
-    
-    // 获取当前可绘制对象
-    _currentDrawable = [_metalView currentDrawable];
-    if (!_currentDrawable) {
-        return;
-    }
-    
-    // 开始新的渲染帧
-    [_metalRenderer beginFrame];
-    
-    // 创建渲染通道描述符
-    MTLRenderPassDescriptor *renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
-    renderPassDescriptor.colorAttachments[0].texture = _reflectionTexture.texture;
-    renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
-    renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 1.0);
-    
-    // 获取渲染命令编码器
-    id<MTLRenderCommandEncoder> renderEncoder = [_renderPipeline renderCommandEncoderWithCommandBuffer:_metalRenderer.currentCommandBuffer
-                                                                                   renderPassDescriptor:renderPassDescriptor];
-    
-    // 设置顶点缓冲区
-    [renderEncoder setVertexBuffer:_vertexBuffer.buffer offset:0 atIndex:0];
-    
-    // 设置片段纹理
-    [renderEncoder setFragmentTexture:_backgroundTexture.texture atIndex:0];
-    
-    // 绘制
-    [renderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle
-                              indexCount:6
-                               indexType:MTLIndexTypeUInt16
-                             indexBuffer:_indexBuffer.buffer
-                       indexBufferOffset:0];
-    
-    // 结束编码
-    [renderEncoder endEncoding];
-    
-    // 提交命令缓冲区
-    [_metalRenderer endFrame];
-}
-
-- (void)updateBackgroundTexture {
-    if (!_backgroundTexture || !screenshot) {
-        return;
-    }
-    
-    // 获取图片数据
-    NSBitmapImageRep *bitmap = screenshot;
-    if (!bitmap) {
-        return;
-    }
-    
-    // 创建位图上下文
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    size_t bytesPerRow = bitmap.pixelsWide * 4;
-    void *imageData = malloc(bytesPerRow * bitmap.pixelsHigh);
-    
-    CGContextRef context = CGBitmapContextCreate(imageData,
-                                               bitmap.pixelsWide,
-                                               bitmap.pixelsHigh,
-                                               8,
-                                               bytesPerRow,
-                                               colorSpace,
-                                               kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
-    
-    if (!context) {
-        free(imageData);
-        CGColorSpaceRelease(colorSpace);
-        return;
-    }
-    
-    // 绘制图片到位图上下文
-    NSGraphicsContext *nsContext = [NSGraphicsContext graphicsContextWithCGContext:context flipped:NO];
-    [NSGraphicsContext saveGraphicsState];
-    [NSGraphicsContext setCurrentContext:nsContext];
-    [bitmap drawInRect:NSMakeRect(0, 0, bitmap.pixelsWide, bitmap.pixelsHigh)];
-    [NSGraphicsContext restoreGraphicsState];
-    
-    // 更新纹理
-    MTLRegion region = MTLRegionMake2D(0, 0, bitmap.pixelsWide, bitmap.pixelsHigh);
-    [_backgroundTexture replaceRegion:region
-                         mipmapLevel:0
-                           withBytes:imageData
-                         bytesPerRow:bytesPerRow];
-    
-    // 清理
-    CGContextRelease(context);
-    free(imageData);
-    CGColorSpaceRelease(colorSpace);
+    // 初始化水波纹参数
+    _time = 0.0f;
+    _nextTime = 0.0f;
+    _timeStep = 1.0f / 60.0f;
+    _waterDepth = waterdepth;
+    _damping = 0.99f;
+    _waveSpeed = 0.1f;
 }
 
 - (void)updateMetalBuffers {
     // 计算水波纹表面
     [self calculateWaterSurface];
     
+    // 更新高度缓冲区
+    float *heights = (float *)_heightBuffer.contents;
+    for (int y = 0; y < tex_h; y++) {
+        for (int x = 0; x < tex_w; x++) {
+            heights[y * tex_w + x] = wet.z[y * tex_w + x];
+        }
+    }
+    
+    // 计算法线
+    id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
+    [_computeManager computeNormalsWithHeightBuffer:_heightBuffer
+                                     normalBuffer:_normalBuffer
+                                           width:tex_w
+                                          height:tex_h
+                                          scale:1.0f
+                                    commandBuffer:commandBuffer];
+    [commandBuffer commit];
+    
     // 更新顶点缓冲区
-    if (_vertexBuffer) {
-        float *vertices = (float *)_vertexBuffer.contents;
-        float *heights = (float *)_heightBuffer.contents;
-        vector_float3 *normals = (vector_float3 *)_normalBuffer.contents;
-        
-        // 更新顶点位置和法线
-        for (int y = 0; y < tex_h; y++) {
-            for (int x = 0; x < tex_w; x++) {
-                int index = y * tex_w + x;
-                int vertexIndex = index * 4; // 每个顶点4个float
-                
-                // 计算归一化坐标
-                float nx = (float)x / (tex_w - 1);
-                float ny = (float)y / (tex_h - 1);
-                
-                // 更新顶点位置
-                vertices[vertexIndex] = nx * 2.0f - 1.0f;     // x
-                vertices[vertexIndex + 1] = ny * 2.0f - 1.0f; // y
-                vertices[vertexIndex + 2] = heights[index];   // z
-                vertices[vertexIndex + 3] = 1.0f;             // w
-                
-                // 更新法线
-                vector_float3 normal = normals[index];
-                // 存储法线到额外的缓冲区或顶点属性中
-                // 这里可以根据需要添加法线缓冲区
-            }
+    simd_float4 *vertices = (simd_float4 *)_vertexBuffer.contents;
+    simd_float3 *normals = (simd_float3 *)_normalBuffer.contents;
+    
+    for (int y = 0; y < tex_h; y++) {
+        for (int x = 0; x < tex_w; x++) {
+            int index = y * tex_w + x;
+            float nx = (float)x / (tex_w - 1);
+            float ny = (float)y / (tex_h - 1);
+            
+            vertices[index] = simd_make_float4(
+                nx * 2.0f - 1.0f,
+                ny * 2.0f - 1.0f,
+                heights[index],
+                1.0f
+            );
         }
     }
     
@@ -690,44 +522,70 @@
 }
 
 - (void)renderWithMetal {
-    if (!_metalRenderer || !_currentDrawable) {
+    if (!_device || !_commandQueue) {
         return;
     }
     
-    // 开始新的渲染帧
-    [_metalRenderer beginFrame];
+    // 创建命令缓冲区
+    id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
     
-    // 创建渲染通道描述符
-    MTLRenderPassDescriptor *renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
-    renderPassDescriptor.colorAttachments[0].texture = _currentDrawable.texture;
-    renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
-    renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 1.0);
+    // 更新水波纹
+    [_computeManager computeWaterSurfaceWithCurrentBuffer:_heightBuffer
+                                          previousBuffer:_heightBuffer
+                                              nextBuffer:_heightBuffer
+                                                   width:tex_w
+                                                  height:tex_h
+                                                   time:_time
+                                                  depth:_waterDepth
+                                                damping:_damping
+                                                  speed:_waveSpeed
+                                           commandBuffer:commandBuffer];
     
-    // 获取渲染命令编码器
-    id<MTLRenderCommandEncoder> renderEncoder = [_renderPipeline renderCommandEncoderWithCommandBuffer:_metalRenderer.currentCommandBuffer
-                                                                                   renderPassDescriptor:renderPassDescriptor];
+    // 更新法线
+    [_computeManager computeNormalsWithHeightBuffer:_heightBuffer
+                                     normalBuffer:_normalBuffer
+                                           width:tex_w
+                                          height:tex_h
+                                          scale:1.0f
+                                    commandBuffer:commandBuffer];
     
-    // 设置顶点缓冲区
-    [renderEncoder setVertexBuffer:_vertexBuffer.buffer offset:0 atIndex:0];
+    // 渲染水波纹
+    [_metalRenderer renderWithCommandBuffer:commandBuffer
+                              vertexBuffer:_vertexBuffer
+                              normalBuffer:_normalBuffer
+                              indexBuffer:_indexBuffer
+                        backgroundTexture:_backgroundTexture
+                        reflectionTexture:_reflectionTexture];
     
-    // 设置片段纹理
-    [renderEncoder setFragmentTexture:_reflectionTexture.texture atIndex:0];
+    // 提交命令
+    [commandBuffer commit];
     
-    // 绘制
-    [renderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle
-                              indexCount:6
-                               indexType:MTLIndexTypeUInt16
-                             indexBuffer:_indexBuffer.buffer
-                       indexBufferOffset:0];
+    // 更新时间
+    _time = _nextTime;
+    _nextTime += _timeStep;
+}
+
+- (void)addWaterDropAtX:(float)x y:(float)y depth:(float)depth amplitude:(float)amplitude {
+    if (!_device || !_commandQueue) {
+        return;
+    }
     
-    // 结束编码
-    [renderEncoder endEncoding];
+    // 创建命令缓冲区
+    id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
     
-    // 提交命令缓冲区
-    [_metalRenderer endFrame];
+    // 计算水滴位置
+    simd_float2 position = simd_make_float2(x * tex_w, y * tex_h);
+    float radius = 10.0f; // 水滴半径
     
-    // 显示绘制结果
-    [_metalRenderer presentDrawable:_currentDrawable];
+    // 添加水滴
+    [_computeManager computeWaterDropWithHeightBuffer:_heightBuffer
+                                          position:position
+                                         amplitude:amplitude
+                                            radius:radius
+                                     commandBuffer:commandBuffer];
+    
+    // 提交命令
+    [commandBuffer commit];
 }
 
 @end
