@@ -53,7 +53,6 @@
 		76E31DCC2DFDA28F00F2F856 /* MTLRenderPipeline.m in Sources */ = {isa = PBXBuildFile; fileRef = 76E31DCA2DFDA28F00F2F856 /* MTLRenderPipeline.m */; };
 		76E8802929BC5F8D006EDBE7 /* ConfigSheet.nib in Resources */ = {isa = PBXBuildFile; fileRef = 76E8802829BC5F8D006EDBE7 /* ConfigSheet.nib */; };
 		8D255AC70486D3F9007BF209 /* LotsaWater_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 32DBCFA80370C50100C91783 /* LotsaWater_Prefix.pch */; };
-		8D255AC80486D3F9007BF209 /* LotsaWaterView.h in Headers */ = {isa = PBXBuildFile; fileRef = F50079790118B23001CA0E54 /* LotsaWaterView.h */; };
 		8D255ACA0486D3F9007BF209 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C167DFE841241C02AAC07 /* InfoPlist.strings */; };
 		8D255ACC0486D3F9007BF209 /* LotsaWaterView.m in Sources */ = {isa = PBXBuildFile; fileRef = F500797A0118B23001CA0E54 /* LotsaWaterView.m */; };
 		8D255ACE0486D3F9007BF209 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7ADFEA557BF11CA2CBB /* Cocoa.framework */; };
@@ -113,7 +112,6 @@
 		76E8802A29BC6020006EDBE7 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		8D255AD20486D3F9007BF209 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		8D255AD30486D3F9007BF209 /* LotsaWater.saver */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LotsaWater.saver; sourceTree = BUILT_PRODUCTS_DIR; };
-		F50079790118B23001CA0E54 /* LotsaWaterView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LotsaWaterView.h; sourceTree = "<group>"; };
 		F500797A0118B23001CA0E54 /* LotsaWaterView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LotsaWaterView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -173,7 +171,6 @@
 		08FB77AFFE84173DC02AAC07 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				F50079790118B23001CA0E54 /* LotsaWaterView.h */,
 				76CF61A12DFE6E2F00F14A1C /* LotsaWaterView.h */,
 				F500797A0118B23001CA0E54 /* LotsaWaterView.m */,
 				76E31DC92DFDA28F00F2F856 /* MTLRenderPipeline.h */,
@@ -268,7 +265,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D255AC70486D3F9007BF209 /* LotsaWater_Prefix.pch in Headers */,
-				8D255AC80486D3F9007BF209 /* LotsaWaterView.h in Headers */,
 				76CF61932DFE579900F14A1C /* WaterTypes.h in Headers */,
 				76A4172D2DFF027200C5BFFD /* MTLShaderManager.h in Headers */,
 				76E31DCB2DFDA28F00F2F856 /* MTLRenderPipeline.h in Headers */,
@@ -417,6 +413,7 @@
 				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = GWG2TQ5XG2;
 				GCC_C_LANGUAGE_STANDARD = c99;
@@ -427,6 +424,7 @@
 				GCC_UNROLL_LOOPS = YES;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = water;
 				INSTALL_PATH = "$(HOME)/Library/Screen Savers";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -449,6 +447,7 @@
 				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = GWG2TQ5XG2;
 				GCC_C_LANGUAGE_STANDARD = c99;
@@ -462,6 +461,7 @@
 				GCC_UNROLL_LOOPS = YES;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = water;
 				INSTALL_PATH = "$(HOME)/Library/Screen Savers";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",

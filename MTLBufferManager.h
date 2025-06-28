@@ -38,6 +38,21 @@ NS_ASSUME_NONNULL_BEGIN
 - (id<MTLBuffer>)createHeightBufferWithWidth:(uint32_t)width height:(uint32_t)height;
 - (id<MTLBuffer>)createNormalBufferWithWidth:(uint32_t)width height:(uint32_t)height;
 - (id<MTLBuffer>)createWaterStateBufferWithWidth:(uint32_t)width height:(uint32_t)height;
+- (id<MTLBuffer>)createTexCoordBufferWithWidth:(NSUInteger)width height:(NSUInteger)height;
+- (id<MTLBuffer>)createConstantsBufferWithSize:(NSUInteger)size;
+
+// 网格生成工具方法
+- (void)generateGridVerticesForBuffer:(id<MTLBuffer>)vertexBuffer 
+                         normalBuffer:(id<MTLBuffer>)normalBuffer
+                        texCoordBuffer:(id<MTLBuffer>)texCoordBuffer
+                                width:(NSUInteger)width 
+                               height:(NSUInteger)height 
+                           waterWidth:(float)waterWidth 
+                          waterHeight:(float)waterHeight;
+
+- (void)generateGridIndicesForBuffer:(id<MTLBuffer>)indexBuffer 
+                               width:(NSUInteger)width 
+                              height:(NSUInteger)height;
 
 @end
 

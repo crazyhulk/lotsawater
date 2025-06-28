@@ -1,5 +1,3 @@
-#define GL_EXT_compiled_vertex_array 1
-
 #import "LotsaCore/LotsaView.h"
 #import "Water.h"
 #import "WaterTypes.h"
@@ -16,11 +14,6 @@
 #import "MTLBufferManager.h"
 #import "MTLComputePipelineManager.h"
 
-#import <OpenGL/gl.h>
-#import <OpenGL/glu.h>
-#import <Metal/Metal.h>
-#import <MetalKit/MetalKit.h>
-
 #import "LotsaCore/NameMangler.h"
 #define LotsaWaterView MangleClassName(LotsaWaterView)
 #define ImagePicker MangleClassName(ImagePicker)
@@ -30,11 +23,9 @@
 //@interface LotsaWaterView:ScreenSaverView
 @interface LotsaWaterView: LotsaView
 {
-	// OpenGL 相关
+	// 水波纹数据
 	NSBitmapImageRep *screenshot;
 
-	GLuint backtex,refltex;
-	double t,t_next,t_div;
 	double raintime,waterdepth;
 
 	int tex_w,tex_h;
@@ -42,26 +33,23 @@
 
 	Water wet;
 
-	struct texcoord { float u,v; } *tex;
-	struct color { GLubyte r,g,b,a; } *col;
-	struct vertexcoord { float x,y; } *vert;
-
-	// Metal 相关
+	// Metal 组件
 	MTLView *_metalView;
 	MTLRenderer *_metalRenderer;
-	MTLBuffer *_vertexBuffer;
-	MTLBuffer *_indexBuffer;
-	MTLTexture *_reflectionTexture;
-	MTLTexture *_backgroundTexture;
-	MTLRenderPipeline *_renderPipeline;
-	MTLComputePipeline *_waterComputePipeline;
-	MTLComputePipeline *_dropComputePipeline;
-	MTLBuffer *_waterParamsBuffer;
-	MTLBuffer *_waterStateBuffer;
-	MTLBuffer *_heightBuffer;
-	MTLBuffer *_normalBuffer;
-	id<MTLCommandBuffer> _currentCommandBuffer;
-	id<CAMetalDrawable> _currentDrawable;
+	MTLBufferManager *_bufferManager;
+	MTLComputePipelineManager *_computeManager;
+	
+	// Metal 缓冲区
+	id<MTLBuffer> _vertexBuffer;
+	id<MTLBuffer> _normalBuffer;
+	id<MTLBuffer> _texCoordBuffer;
+	id<MTLBuffer> _indexBuffer;
+	id<MTLBuffer> _heightBuffer;
+	id<MTLBuffer> _constantsBuffer;
+	
+	// Metal 纹理
+	id<MTLTexture> _reflectionTexture;
+	id<MTLTexture> _backgroundTexture;
 
 	// 共享属性
 	IBOutlet NSSlider *detail;
@@ -73,12 +61,9 @@
 	IBOutlet NSPopUpButton *imgsrc;
 	IBOutlet LWImagePicker *imageview;
 
-	// Metal 相关
+	// Metal 设备和命令队列
 	id<MTLDevice> _device;
 	id<MTLCommandQueue> _commandQueue;
-	MTLShaderManager *_shaderManager;
-	MTLBufferManager *_bufferManager;
-	MTLComputePipelineManager *_computeManager;
 
 	// 水波纹参数
 	float _time;
@@ -106,10 +91,10 @@
 
 // Metal 相关方法
 - (void)setupMetal;
-- (void)renderWithMetal;
-- (void)updateMetalBuffers;
-- (void)calculateWaterSurface;
-- (void)addWaterDropAtX:(float)x y:(float)y depth:(float)d amplitude:(float)ampl;
+- (void)createMetalBuffers;
+- (void)updateWaterSurface;
+- (void)updateConstants;
+- (void)addRandomWaterDrop;
 - (void)updateReflectionTexture;
 - (void)updateBackgroundTexture;
 

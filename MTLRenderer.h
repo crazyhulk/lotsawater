@@ -12,7 +12,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) id<MTLCommandBuffer> currentCommandBuffer;
 
 - (instancetype)init;
+- (instancetype)initWithDevice:(id<MTLDevice>)device library:(id<MTLLibrary>)library;
 - (BOOL)setupMetal;
+- (BOOL)setupPipeline;
 - (void)cleanup;
 
 // 基础渲染方法
@@ -28,11 +30,22 @@ NS_ASSUME_NONNULL_BEGIN
 
 // 水波纹渲染方法
 - (void)renderWithCommandBuffer:(id<MTLCommandBuffer>)commandBuffer
+                        drawable:(id<CAMetalDrawable>)drawable
+                   vertexBuffer:(id<MTLBuffer>)vertexBuffer
+                  normalBuffer:(id<MTLBuffer>)normalBuffer
+              texCoordBuffer:(id<MTLBuffer>)texCoordBuffer
+                   indexBuffer:(id<MTLBuffer>)indexBuffer
+              backgroundTexture:(id<MTLTexture>)backgroundTexture
+              reflectionTexture:(id<MTLTexture>)reflectionTexture
+                     constants:(id<MTLBuffer>)constantsBuffer;
+
+// 已弃用的渲染方法
+- (void)renderWithCommandBuffer:(id<MTLCommandBuffer>)commandBuffer
                    vertexBuffer:(id<MTLBuffer>)vertexBuffer
                   normalBuffer:(id<MTLBuffer>)normalBuffer
                    indexBuffer:(id<MTLBuffer>)indexBuffer
               backgroundTexture:(id<MTLTexture>)backgroundTexture
-              reflectionTexture:(id<MTLTexture>)reflectionTexture;
+              reflectionTexture:(id<MTLTexture>)reflectionTexture DEPRECATED_MSG_ATTRIBUTE("Use the new method with drawable and constants");
 
 @end
 

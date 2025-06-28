@@ -1,13 +1,78 @@
 #import "LotsaWaterView.h"
-#import "LotsaCore/GLConverter.h"
 #import "LotsaCore/Random.h"
+#import "WaterTypes.h"
+#import <simd/simd.h>
+#import <os/log.h>
 
 @implementation LotsaWaterView
 
++ (void)initialize {
+    if (self == [LotsaWaterView class]) {
+        // 类初始化时的日志
+        NSLog(@"=== LotsaWaterView +initialize called ===");
+        os_log(OS_LOG_DEFAULT, "LotsaWaterView class initialized");
+        
+        // 写入文件日志
+        NSString *logPath = @"/tmp/lotsawater_init.log";
+        NSString *logMessage = [NSString stringWithFormat:@"%@ - LotsaWaterView class initialized\n", [NSDate date]];
+        [logMessage writeToFile:logPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+    }
+}
+
++ (void)load {
+    // 类加载时的日志
+    NSLog(@"=== LotsaWaterView +load called ===");
+    os_log(OS_LOG_DEFAULT, "LotsaWaterView class loaded");
+}
+
++ (void)debugLog:(NSString *)message {
+    // 同时尝试多种方法来确保我们能看到调试信息
+    // 1. 尝试写入到用户桌面上的调试文件（更容易找到）
+    NSString *desktopPath = [@"/tmp/lotsawater_debug.log" stringByExpandingTildeInPath];
+    NSString *timestampedMessage = [NSString stringWithFormat:@"%@ - %@\n", [NSDate date], message];
+    
+    if (![[NSFileManager defaultManager] fileExistsAtPath:desktopPath]) {
+        [@"LotsaWater Debug Log\n" writeToFile:desktopPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+    }
+    
+    NSFileHandle *fileHandle = [NSFileHandle fileHandleForWritingAtPath:desktopPath];
+    if (fileHandle) {
+        [fileHandle seekToEndOfFile];
+        [fileHandle writeData:[timestampedMessage dataUsingEncoding:NSUTF8StringEncoding]];
+        [fileHandle closeFile];
+    }
+    
+    // 2. 同时写入到临时目录
+    NSString *tempPath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"lotsawater_debug.log"];
+    if (![[NSFileManager defaultManager] fileExistsAtPath:tempPath]) {
+        [@"LotsaWater Debug Log\n" writeToFile:tempPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+    }
+    
+    NSFileHandle *tempFileHandle = [NSFileHandle fileHandleForWritingAtPath:tempPath];
+    if (tempFileHandle) {
+        [tempFileHandle seekToEndOfFile];
+        [tempFileHandle writeData:[timestampedMessage dataUsingEncoding:NSUTF8StringEncoding]];
+        [tempFileHandle closeFile];
+    }
+    
+    // 3. 保留NSLog作为备用
+    NSLog(@"LotsaWater: %@", message);
+}
+
 -(id)initWithFrame:(NSRect)frame isPreview:(BOOL)preview
 {
+    os_log(OS_LOG_DEFAULT, "Hello %{public}@", @"屏保"); // ✅ 正确方式
+
+    os_log_t logger = os_log_create("in.xizi.lotsawater", "screensaver");
+    os_log_error(logger, "========= 屏保启动成功！value={public}");
+	// 立即在Console中显示，最可靠的方法
+	NSLog(@"=== LotsaWater initWithFrame called ===");
+	[LotsaWaterView debugLog:@"initWithFrame called"];
+	
 	if((self=[super initWithFrame:frame isPreview:preview useGL:YES]))
 	{
+		NSLog(@"=== LotsaWater initWithFrame success, frame: %@ ===", NSStringFromRect(frame));
+		[LotsaWaterView debugLog:[NSString stringWithFormat:@"initWithFrame success, frame: %@", NSStringFromRect(frame)]];
 		screenshot=nil;
 
 //        NSLog(@"==============frame:%f", frame.size.width);
@@ -35,11 +100,16 @@
     }
 
     // 创建 Metal 视图
+    [LotsaWaterView debugLog:@"Creating MTLView"];
     _metalView = [[MTLView alloc] initWithFrame:self.bounds];
-    [self addSubview:_metalView];
+    if (!_metalView) {
+        [LotsaWaterView debugLog:@"ERROR: Failed to create MTLView"];
+        return self;
+    }
     
-    // 初始化 OpenGL 相关资源
-    [self setupOpenGL];
+    [LotsaWaterView debugLog:[NSString stringWithFormat:@"Created MTLView with frame: %@", NSStringFromRect(self.bounds)]];
+    [self addSubview:_metalView];
+    [LotsaWaterView debugLog:@"Added MTLView as subview"];
     
     // 初始化 Metal 相关资源
     [self setupMetal];
@@ -56,18 +126,13 @@
     _metalView = nil;
     _metalRenderer = nil;
     _vertexBuffer = nil;
+    _normalBuffer = nil;
+    _texCoordBuffer = nil;
     _indexBuffer = nil;
+    _heightBuffer = nil;
+    _constantsBuffer = nil;
     _reflectionTexture = nil;
     _backgroundTexture = nil;
-    _renderPipeline = nil;
-    _waterComputePipeline = nil;
-    _dropComputePipeline = nil;
-    _waterParamsBuffer = nil;
-    _waterStateBuffer = nil;
-    _heightBuffer = nil;
-    _normalBuffer = nil;
-    _currentCommandBuffer = nil;
-    _currentDrawable = nil;
 }
 
 -(void)drawRect:(NSRect)rect
@@ -82,6 +147,10 @@
 
 -(void)startAnimationWithDefaults:(ScreenSaverDefaults *)defaults
 {
+	[LotsaWaterView debugLog:@"=== startAnimationWithDefaults called ==="];
+	[LotsaWaterView debugLog:[NSString stringWithFormat:@"Current _device: %@", _device]];
+	[LotsaWaterView debugLog:[NSString stringWithFormat:@"Current _bufferManager: %@", _bufferManager]];
+	
 	if(!screenshot)
 	if(ispreview||[[self defaults] integerForKey:@"imageSource"]==0)
 	{
@@ -115,9 +184,7 @@
 	double rain=[defaults floatForKey:@"rainFall"];
 	double d=[defaults floatForKey:@"depth"];
 
-	t=0;
-	t_next=1;
-	t_div=(slow+1)*(slow+1);
+	// 时间参数由新的Metal系统管理，这里保留raintime计算
 
 	raintime=4*0.9*(rain-1)*(rain-1)+0.1;
 	waterdepth=0.2+d*d*4*1.8;
@@ -125,21 +192,19 @@
 	int srcid=[defaults integerForKey:@"imageSource"];
 	NSString *imagename=[defaults stringForKey:@"imageFileName"];
 
-	[[self openGLContext] makeCurrentContext];
-
+	// 处理纹理资源
 	switch(srcid)
 	{
 		case 0:
-			backtex=[GLConverter uncopiedTextureRectangleFromRep:screenshot];
 			tex_w=[screenshot pixelsWide];
 			tex_h=[screenshot pixelsHigh];
 		break;
 		case 1:
 		{
 			NSBitmapImageRep *rep=[NSImageRep imageRepWithContentsOfFile:imagename];
-			backtex=[GLConverter textureRectangleFromRep:rep];
 			tex_w=[rep pixelsWide];
 			tex_h=[rep pixelsHigh];
+			screenshot = rep; // 暂时使用这个图像
 		}
 		break;
 	}
@@ -159,135 +224,107 @@
 		water_h=screen_fh;
 	}
 
-	refltex=[GLConverter texture2DFromRep:[self imageRepFromBundle:@"reflections.png"]];
-
+	// 初始化水波纹数据结构
 	InitWater(&wet,gridsize,gridsize,max_p,max_p,1,1,2*water_w,2*water_h);
 
-/*	WaterState rnd;
-	InitRandomWaterState(&rnd,&wet);
-	AddWaterStateAtTime(&wet,&rnd,0);
-	CleanupWaterState(&rnd);*/
-
-	tex=malloc(wet.w*wet.h*sizeof(struct texcoord));
-	col=malloc(wet.w*wet.h*sizeof(struct color));
-	vert=malloc(wet.w*wet.h*sizeof(struct vertexcoord));
-
-	int i=0;
-	for(int y=0;y<wet.h;y++)
-	for(int x=0;x<wet.w;x++)
-	{
-		float fx=(float)x/(float)(wet.w-1);
-		float fy=(float)y/(float)(wet.h-1);
-
-		vert[i].x=fx;
-		vert[i].y=fy;
-		col[i].a=255;
-
-		i++;
+	// 确保Metal已经初始化，如果没有则重新初始化
+	if (!_device || !_bufferManager) {
+		NSLog(@"Metal not initialized in startAnimationWithDefaults, calling setupMetal...");
+		[self setupMetal];
+	}
+	
+	// 创建Metal缓冲区
+	if (_device && _bufferManager) {
+		[self createMetalBuffers];
+		
+		// 更新纹理
+		[self updateBackgroundTexture];
+		[self updateReflectionTexture];
+	} else {
+		NSLog(@"ERROR: Failed to initialize Metal for water animation");
 	}
 
-	glClearColor(0,0,0,0);
-	glViewport(0,0,screen_w,screen_h);
-
-	glActiveTextureARB(GL_TEXTURE0_ARB);
-	glEnable(GL_TEXTURE_RECTANGLE_EXT);
-	glBindTexture(GL_TEXTURE_RECTANGLE_EXT,backtex);
-	glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
-	glMatrixMode(GL_TEXTURE);
-	glLoadIdentity();
-	glScalef((float)tex_w,(float)tex_h,1);
-
-	glActiveTextureARB(GL_TEXTURE1_ARB);
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D,refltex);
-	glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_ADD);
-	glEnable(GL_TEXTURE_GEN_S);
-	glEnable(GL_TEXTURE_GEN_T);
-	glTexGeni(GL_S,GL_TEXTURE_GEN_MODE,GL_SPHERE_MAP);
-	glTexGeni(GL_T,GL_TEXTURE_GEN_MODE,GL_SPHERE_MAP);
-	glEnable(GL_NORMALIZE);
-
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glScalef(1/screen_fw,1/screen_fh,-0.001);
-
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-//	glTranslatef(0,0,-5);
-	glTranslatef(-water_w,water_h,-5);
-	glScalef(2*water_w,-2*water_h,10);
-
-//	[self animateOneFrame];
-
-	[NSOpenGLContext clearCurrentContext];
+	// 初始化时间参数
+	_time = 0.0;
+	_nextTime = 0.0;
+	_timeStep = 1.0 / 60.0;
+	_waterDepth = waterdepth;
+	_damping = 0.98;
+	_waveSpeed = 1.0;
 }
 
 -(void)stopAnimation
 {
-	[[self openGLContext] makeCurrentContext];
-
+	// 清理水波纹数据
 	CleanupWater(&wet);
 
-	glDeleteTextures(1,&backtex);
-	glDeleteTextures(1,&refltex);
-
-	free(tex);
-	free(col);
-	free(vert);
-
-	[NSOpenGLContext clearCurrentContext];
+	// 清理Metal资源
+	_vertexBuffer = nil;
+	_normalBuffer = nil;
+	_texCoordBuffer = nil;
+	_heightBuffer = nil;
+	_indexBuffer = nil;
+	_constantsBuffer = nil;
+	_backgroundTexture = nil;
+	_reflectionTexture = nil;
+	_metalRenderer = nil;
+	_bufferManager = nil;
+	_computeManager = nil;
+	_commandQueue = nil;
+	_device = nil;
 
 	[super stopAnimation];
 }
 
 -(void)animateOneFrame
 {
+    if (!_device || !_metalView) {
+        NSLog(@"animateOneFrame: Missing device (%@) or metalView (%@)", _device, _metalView);
+        return;
+    }
+    
     // 更新水波纹状态
-    [self updateMetalBuffers];
+    [self updateWaterSurface];
     
     // 获取当前可绘制对象
     id<CAMetalDrawable> drawable = [_metalView currentDrawable];
     if (!drawable) {
+        NSLog(@"animateOneFrame: No drawable available");
         return;
     }
     
+    NSLog(@"animateOneFrame: Rendering frame with drawable: %@", drawable);
+    
     // 创建命令缓冲区
     id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
+    commandBuffer.label = @"Water Animation Frame";
     
-    // 更新水波纹
-    [_computeManager computeWaterSurfaceWithCurrentBuffer:_heightBuffer
-                                          previousBuffer:_heightBuffer
-                                              nextBuffer:_heightBuffer
-                                                   width:tex_w
-                                                  height:tex_h
-                                                   time:_time
-                                                  depth:_waterDepth
-                                                damping:_damping
-                                                  speed:_waveSpeed
-                                           commandBuffer:commandBuffer];
-    
-    // 更新法线
-    [_computeManager computeNormalsWithHeightBuffer:_heightBuffer
-                                     normalBuffer:_normalBuffer
-                                           width:tex_w
-                                          height:tex_h
-                                          scale:1.0f
-                                    commandBuffer:commandBuffer];
+    // 更新常量缓冲区
+    [self updateConstants];
     
     // 渲染水波纹
     [_metalRenderer renderWithCommandBuffer:commandBuffer
-                              vertexBuffer:_vertexBuffer
+                                    drawable:drawable
+                               vertexBuffer:_vertexBuffer
                               normalBuffer:_normalBuffer
-                              indexBuffer:_indexBuffer
+                            texCoordBuffer:_texCoordBuffer
+                               indexBuffer:_indexBuffer
                         backgroundTexture:_backgroundTexture
-                        reflectionTexture:_reflectionTexture];
+                        reflectionTexture:_reflectionTexture
+                               constants:_constantsBuffer];
+    
+    // 显示drawable
+    [commandBuffer presentDrawable:drawable];
     
     // 提交命令
     [commandBuffer commit];
     
     // 更新时间
-    _time = _nextTime;
-    _nextTime += _timeStep;
+    _time += _timeStep;
+    if (_time >= _nextTime) {
+        [self addRandomWaterDrop];
+        _nextTime += (5 - raintime) * exp(-_time / 10) + raintime;
+    }
 }
 
 -(void)updateConfigWindow:(NSWindow *)window usingDefaults:(ScreenSaverDefaults *)defaults
@@ -347,54 +384,21 @@
     return NO;
 }
 
-- (void)setupOpenGL {
-    // 保持原有的 OpenGL 初始化代码
-    // ... existing code ...
-}
-
-- (void)setupMetal {
-    // 获取默认的 Metal 设备
-    _device = MTLCreateSystemDefaultDevice();
-    if (!_device) {
-        NSLog(@"Metal is not supported on this device");
+- (void)createMetalBuffers {
+    if (!_device || !_bufferManager) {
+        NSLog(@"Metal device or buffer manager not initialized");
         return;
     }
     
-    // 创建命令队列
-    _commandQueue = [_device newCommandQueue];
+    NSLog(@"Creating Metal buffers for water grid %dx%d", wet.w, wet.h);
     
-    // 初始化 Metal 渲染器
-    _metalRenderer = [[MTLRenderer alloc] init];
-    if (!_metalRenderer) {
-        NSLog(@"Failed to create Metal renderer");
-        return;
-    }
-    
-    // 初始化着色器管理器
-    _shaderManager = [[MTLShaderManager alloc] initWithDevice:_device];
-    if (!_shaderManager) {
-        NSLog(@"Failed to create shader manager");
-        return;
-    }
-    
-    // 初始化缓冲区管理器
-    _bufferManager = [[MTLBufferManager alloc] initWithDevice:_device];
-    if (!_bufferManager) {
-        NSLog(@"Failed to create buffer manager");
-        return;
-    }
-    
-    // 初始化计算管线管理器
-    _computeManager = [[MTLComputePipelineManager alloc] initWithDevice:_device];
-    if (!_computeManager) {
-        NSLog(@"Failed to create compute pipeline manager");
-        return;
-    }
-    
-    // 创建高度缓冲区
-    _heightBuffer = [_bufferManager createHeightBufferWithWidth:wet.w height:wet.h];
-    if (!_heightBuffer) {
-        NSLog(@"Failed to create height buffer");
+    // 创建顶点缓冲区
+    NSUInteger vertexCount = wet.w * wet.h;
+    _vertexBuffer = [_bufferManager createVertexBufferWithVertices:NULL 
+                                                           count:vertexCount 
+                                                          stride:sizeof(simd_float3)];
+    if (!_vertexBuffer) {
+        NSLog(@"Failed to create vertex buffer");
         return;
     }
     
@@ -405,74 +409,235 @@
         return;
     }
     
-    // 创建顶点缓冲区
-    _vertexBuffer = [_bufferManager createVertexBufferWithVertices:NULL
-                                                            count:wet.w * wet.h
-                                                           stride:sizeof(float) * 3];
-    if (!_vertexBuffer) {
-        NSLog(@"Failed to create vertex buffer");
+    // 创建纹理坐标缓冲区
+    _texCoordBuffer = [_bufferManager createTexCoordBufferWithWidth:wet.w height:wet.h];
+    if (!_texCoordBuffer) {
+        NSLog(@"Failed to create texcoord buffer");
+        return;
+    }
+    
+    // 创建高度缓冲区
+    _heightBuffer = [_bufferManager createHeightBufferWithWidth:wet.w height:wet.h];
+    if (!_heightBuffer) {
+        NSLog(@"Failed to create height buffer");
         return;
     }
     
     // 创建索引缓冲区
-    NSInteger indexCount = (wet.w - 1) * (wet.h - 1) * 6;
-    uint32_t *indices = (uint32_t *)malloc(indexCount * sizeof(uint32_t));
-    if (!indices) {
-        NSLog(@"Failed to allocate indices");
-        return;
-    }
-    
-    // 生成索引
-    NSInteger idx = 0;
-    for (int y = 0; y < wet.h - 1; y++) {
-        for (int x = 0; x < wet.w - 1; x++) {
-            uint32_t base = y * wet.w + x;
-            indices[idx++] = base;
-            indices[idx++] = base + 1;
-            indices[idx++] = base + wet.w;
-            indices[idx++] = base + 1;
-            indices[idx++] = base + wet.w + 1;
-            indices[idx++] = base + wet.w;
-        }
-    }
-    
-    _indexBuffer = [_bufferManager createIndexBufferWithIndices:indices
-                                                         count:indexCount
-                                                        format:MTLIndexTypeUInt32];
-    free(indices);
-    
+    NSUInteger indexCount = (wet.w - 1) * (wet.h - 1) * 6;
+    _indexBuffer = [_bufferManager createBufferWithLength:indexCount * sizeof(uint32_t) 
+                                                  options:MTLResourceStorageModeShared];
     if (!_indexBuffer) {
         NSLog(@"Failed to create index buffer");
         return;
     }
     
+    [_bufferManager generateGridIndicesForBuffer:_indexBuffer width:wet.w height:wet.h];
+    
+    // 创建常量缓冲区
+    _constantsBuffer = [_bufferManager createConstantsBufferWithSize:sizeof(MetalConstants)];
+    if (!_constantsBuffer) {
+        NSLog(@"Failed to create constants buffer");
+        return;
+    }
+    
     // 创建背景纹理
     MTLTextureDescriptor *backgroundDesc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm
-                                                                                              width:wet.w
-                                                                                             height:wet.h
+                                                                                              width:tex_w
+                                                                                             height:tex_h
                                                                                           mipmapped:NO];
     backgroundDesc.usage = MTLTextureUsageShaderRead | MTLTextureUsageShaderWrite;
     _backgroundTexture = [_device newTextureWithDescriptor:backgroundDesc];
     
     // 创建反射纹理
     MTLTextureDescriptor *reflectionDesc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm
-                                                                                               width:wet.w
-                                                                                              height:wet.h
+                                                                                               width:256
+                                                                                              height:256
                                                                                            mipmapped:NO];
     reflectionDesc.usage = MTLTextureUsageShaderRead | MTLTextureUsageShaderWrite;
     _reflectionTexture = [_device newTextureWithDescriptor:reflectionDesc];
     
-    // 初始化水波纹参数
-    _time = 0.0;
-    _nextTime = 0.0;
-    _timeStep = 1.0 / 60.0;  // 60 FPS
-    _waterDepth = 0.1;
-    _damping = 0.98;
-    _waveSpeed = 1.0;
+    // 生成网格顶点
+    [_bufferManager generateGridVerticesForBuffer:_vertexBuffer 
+                                     normalBuffer:_normalBuffer 
+                                    texCoordBuffer:_texCoordBuffer 
+                                            width:wet.w 
+                                           height:wet.h 
+                                       waterWidth:water_w 
+                                      waterHeight:water_h];
     
-    // 更新纹理
-    [self updateBackgroundTexture];
-    [self updateReflectionTexture];
+    NSLog(@"Metal buffers created successfully");
+}
+
+- (void)setupMetal {
+    [LotsaWaterView debugLog:@"Setting up Metal..."];
+    
+    // 获取默认的 Metal 设备
+    _device = MTLCreateSystemDefaultDevice();
+    if (!_device) {
+        [LotsaWaterView debugLog:@"ERROR: Metal is not supported on this device"];
+        return;
+    }
+    [LotsaWaterView debugLog:[NSString stringWithFormat:@"Metal device: %@", _device.name]];
+    
+    // 设置MTLView的设备
+    [LotsaWaterView debugLog:@"Setting MTLView device"];
+    [_metalView setDevice:_device];
+    
+    // 创建命令队列
+    [LotsaWaterView debugLog:@"Creating command queue"];
+    _commandQueue = [_device newCommandQueue];
+    if (!_commandQueue) {
+        [LotsaWaterView debugLog:@"ERROR: Failed to create command queue"];
+        return;
+    }
+    [LotsaWaterView debugLog:@"Command queue created successfully"];
+    
+    // 直接在这里加载Metal库，不依赖MTLRenderer的init
+    [LotsaWaterView debugLog:@"Loading Metal library directly"];
+    
+    // 根据测试程序的结果，直接尝试bundle方式（因为newDefaultLibrary会失败）
+    NSBundle *bundle = [NSBundle bundleForClass:[self class]];
+    [LotsaWaterView debugLog:[NSString stringWithFormat:@"Using bundle: %@", bundle.bundlePath]];
+    
+    NSError *error = nil;
+    id<MTLLibrary> metalLibrary = [_device newDefaultLibraryWithBundle:bundle error:&error];
+    if (!metalLibrary) {
+        [LotsaWaterView debugLog:[NSString stringWithFormat:@"Bundle library failed: %@", error.localizedDescription]];
+        
+        // 尝试手动加载metallib文件
+        NSString *metalLibPath = [bundle pathForResource:@"default" ofType:@"metallib"];
+        if (metalLibPath) {
+            [LotsaWaterView debugLog:[NSString stringWithFormat:@"Found metallib at: %@", metalLibPath]];
+            NSURL *libraryURL = [NSURL fileURLWithPath:metalLibPath];
+            metalLibrary = [_device newLibraryWithURL:libraryURL error:&error];
+            if (!metalLibrary) {
+                [LotsaWaterView debugLog:[NSString stringWithFormat:@"Failed to load from URL: %@", error.localizedDescription]];
+                return;
+            } else {
+                [LotsaWaterView debugLog:@"Successfully loaded library from URL"];
+            }
+        } else {
+            [LotsaWaterView debugLog:@"No metallib file found in bundle"];
+            return;
+        }
+    } else {
+        [LotsaWaterView debugLog:@"Successfully loaded library from bundle"];
+    }
+    
+    // 初始化 Metal 渲染器，传入已成功加载的设备和库
+    [LotsaWaterView debugLog:@"Creating Metal renderer with device and library"];
+    _metalRenderer = [[MTLRenderer alloc] initWithDevice:_device library:metalLibrary];
+    if (!_metalRenderer) {
+        [LotsaWaterView debugLog:@"ERROR: Failed to create Metal renderer with device and library"];
+        return;
+    }
+    [LotsaWaterView debugLog:@"Metal renderer created successfully"];
+    
+    // 初始化缓冲区管理器
+    [LotsaWaterView debugLog:@"Creating buffer manager"];
+    _bufferManager = [[MTLBufferManager alloc] initWithDevice:_device];
+    if (!_bufferManager) {
+        [LotsaWaterView debugLog:@"Failed to create buffer manager"];
+        return;
+    }
+    [LotsaWaterView debugLog:@"Buffer manager created successfully"];
+    
+    // 初始化计算管线管理器
+    [LotsaWaterView debugLog:@"Creating compute pipeline manager"];
+    _computeManager = [[MTLComputePipelineManager alloc] initWithDevice:_device];
+    if (!_computeManager) {
+        [LotsaWaterView debugLog:@"Failed to create compute pipeline manager"];
+        return;
+    }
+    [LotsaWaterView debugLog:@"Compute pipeline manager created successfully"];
+    
+    [LotsaWaterView debugLog:@"Metal setup completed successfully"];
+}
+
+- (void)updateWaterSurface {
+    // 计算当前时间的水波纹表面
+    CalculateWaterSurfaceAtTime(&wet, _time);
+    
+    // 更新顶点缓冲区的高度数据
+    if (_vertexBuffer) {
+        simd_float3 *vertices = (simd_float3 *)[_vertexBuffer contents];
+        for (int y = 0; y < wet.h; y++) {
+            for (int x = 0; x < wet.w; x++) {
+                int index = y * wet.w + x;
+                vertices[index].z = wet.z[index] * _waterDepth;
+            }
+        }
+    }
+    
+    // 更新法线缓冲区
+    if (_normalBuffer) {
+        simd_float3 *normals = (simd_float3 *)[_normalBuffer contents];
+        for (int y = 0; y < wet.h; y++) {
+            for (int x = 0; x < wet.w; x++) {
+                int index = y * wet.w + x;
+                normals[index] = simd_make_float3(wet.n[index].x, wet.n[index].y, wet.n[index].z);
+            }
+        }
+    }
+}
+
+- (void)updateConstants {
+    if (!_constantsBuffer) {
+        return;
+    }
+    
+    MetalConstants *constants = (MetalConstants *)[_constantsBuffer contents];
+    
+    // 设置投影和模型视图矩阵
+    simd_float4x4 projection = matrix_orthographic_projection(-water_w, water_w, -water_h, water_h, -10.0f, 10.0f);
+    simd_float4x4 modelView = matrix_identity_float4x4;
+    modelView.columns[3].z = -5.0f; // 向后移动5个单位
+    
+    constants->modelViewProjectionMatrix = simd_mul(projection, modelView);
+    constants->normalMatrix = matrix_upper_left_3x3(modelView);
+    constants->time = _time;
+    constants->waterDepth = _waterDepth;
+    constants->waterSize = simd_make_float2(water_w, water_h);
+    constants->textureSize = simd_make_float2(tex_w, tex_h);
+    constants->imageFade = [[self defaults] floatForKey:@"imageFade"];
+}
+
+- (void)addRandomWaterDrop {
+    // 添加随机水滴
+    float x0 = RandomFloat() * wet.lx;
+    float y0 = RandomFloat() * wet.ly;
+    
+    WaterState drip1, drip2;
+    InitDripWaterState(&drip1, &wet, x0, y0, 0.14, -0.01);
+    InitDripWaterState(&drip2, &wet, x0, y0, 0.07, 0.01);
+    
+    AddWaterStateAtTime(&wet, &drip1, _time);
+    AddWaterStateAtTime(&wet, &drip2, _time);
+    
+    CleanupWaterState(&drip1);
+    CleanupWaterState(&drip2);
+}
+
+// 辅助函数：创建正交投影矩阵
+static simd_float4x4 matrix_orthographic_projection(float left, float right, float bottom, float top, float near, float far) {
+    simd_float4x4 m = matrix_identity_float4x4;
+    m.columns[0].x = 2.0f / (right - left);
+    m.columns[1].y = 2.0f / (top - bottom);
+    m.columns[2].z = -2.0f / (far - near);
+    m.columns[3].x = -(right + left) / (right - left);
+    m.columns[3].y = -(top + bottom) / (top - bottom);
+    m.columns[3].z = -(far + near) / (far - near);
+    return m;
+}
+
+// 辅助函数：提取3x3矩阵
+static simd_float4x4 matrix_upper_left_3x3(simd_float4x4 m) {
+    simd_float4x4 result = matrix_identity_float4x4;
+    result.columns[0] = simd_make_float4(m.columns[0].x, m.columns[0].y, m.columns[0].z, 0.0f);
+    result.columns[1] = simd_make_float4(m.columns[1].x, m.columns[1].y, m.columns[1].z, 0.0f);
+    result.columns[2] = simd_make_float4(m.columns[2].x, m.columns[2].y, m.columns[2].z, 0.0f);
+    return result;
 }
 
 - (void)updateMetalBuffers {
@@ -511,49 +676,6 @@
     }
 }
 
-- (void)renderWithMetal {
-    if (!_device || !_commandQueue) {
-        return;
-    }
-    
-    // 创建命令缓冲区
-    id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
-    
-    // 更新水波纹
-    [_computeManager computeWaterSurfaceWithCurrentBuffer:_heightBuffer
-                                          previousBuffer:_heightBuffer
-                                              nextBuffer:_heightBuffer
-                                                   width:tex_w
-                                                  height:tex_h
-                                                   time:_time
-                                                  depth:_waterDepth
-                                                damping:_damping
-                                                  speed:_waveSpeed
-                                           commandBuffer:commandBuffer];
-    
-    // 更新法线
-    [_computeManager computeNormalsWithHeightBuffer:_heightBuffer
-                                     normalBuffer:_normalBuffer
-                                           width:tex_w
-                                          height:tex_h
-                                          scale:1.0f
-                                    commandBuffer:commandBuffer];
-    
-    // 渲染水波纹
-    [_metalRenderer renderWithCommandBuffer:commandBuffer
-                              vertexBuffer:_vertexBuffer
-                              normalBuffer:_normalBuffer
-                              indexBuffer:_indexBuffer
-                        backgroundTexture:_backgroundTexture
-                        reflectionTexture:_reflectionTexture];
-    
-    // 提交命令
-    [commandBuffer commit];
-    
-    // 更新时间
-    _time = _nextTime;
-    _nextTime += _timeStep;
-}
 
 - (void)addWaterDropAtX:(float)x y:(float)y depth:(float)depth amplitude:(float)amplitude {
     if (!_device || !_commandQueue) {

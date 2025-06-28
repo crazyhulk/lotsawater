@@ -11,6 +11,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithFrame:(NSRect)frameRect;
 - (void)setFrameSize:(NSSize)newSize;
+- (void)setDevice:(id<MTLDevice>)device;
 
 @end
 

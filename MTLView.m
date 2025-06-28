@@ -14,12 +14,36 @@
         
         // 配置 Metal 层
         _metalLayer = (CAMetalLayer *)self.layer;
-        _metalLayer.device = MTLCreateSystemDefaultDevice();
+        // 不在这里设置device，稍后由父视图设置
         _metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
         _metalLayer.framebufferOnly = YES;
-        _metalLayer.contentsScale = self.window.screen.backingScaleFactor;
+        // contentsScale 稍后设置，因为这时window可能还没有
     }
     return self;
+}
+
+// 添加设置设备的方法
+- (void)setDevice:(id<MTLDevice>)device {
+    _metalLayer.device = device;
+    
+    // 设置正确的scale
+    NSScreen *screen = self.window.screen ?: [NSScreen mainScreen];
+    _metalLayer.contentsScale = screen.backingScaleFactor;
+    
+    // 设置drawable size - 但限制最大尺寸以避免内存问题
+    NSSize frameSize = self.frame.size;
+    CGFloat scale = _metalLayer.contentsScale;
+    
+    // 限制drawable size以避免内存分配失败
+    CGFloat maxSize = 2048; // 限制最大尺寸
+    CGFloat drawableWidth = MIN(frameSize.width * scale, maxSize);
+    CGFloat drawableHeight = MIN(frameSize.height * scale, maxSize);
+    
+    _metalLayer.drawableSize = CGSizeMake(drawableWidth, drawableHeight);
+    
+    NSLog(@"MTLView: Set device %@ with scale %f, drawable size: %fx%f", 
+          device.name, _metalLayer.contentsScale,
+          _metalLayer.drawableSize.width, _metalLayer.drawableSize.height);
 }
 
 - (void)setFrameSize:(NSSize)newSize {
@@ -31,7 +55,13 @@
 }
 
 - (id<CAMetalDrawable>)currentDrawable {
-    return [_metalLayer nextDrawable];
+    id<CAMetalDrawable> drawable = [_metalLayer nextDrawable];
+    if (!drawable) {
+        NSLog(@"WARNING: nextDrawable returned nil. Layer device: %@, size: %fx%f", 
+              _metalLayer.device ? _metalLayer.device.name : @"nil",
+              _metalLayer.drawableSize.width, _metalLayer.drawableSize.height);
+    }
+    return drawable;
 }
 
 @end 

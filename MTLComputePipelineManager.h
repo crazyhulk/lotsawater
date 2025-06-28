@@ -1,5 +1,6 @@
 #import <Metal/Metal.h>
 #import <simd/simd.h>
+#import "WaterTypes.h"
 
 // 法线计算参数结构体
 typedef struct {
@@ -7,16 +8,6 @@ typedef struct {
     uint32_t height;
     float scale;
 } NormalComputeParams;
-
-// 水波纹计算参数结构体
-typedef struct {
-    uint32_t width;
-    uint32_t height;
-    float time;
-    float depth;
-    float damping;
-    float speed;
-} WaterComputeParams;
 
 @interface MTLComputePipelineManager : NSObject
 
