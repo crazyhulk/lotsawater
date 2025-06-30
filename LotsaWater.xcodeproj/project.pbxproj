@@ -16,16 +16,12 @@
 		1B81B014136BA2BD002AA257 /* NameMangler.h in Headers */ = {isa = PBXBuildFile; fileRef = 1B81B000136BA2BD002AA257 /* NameMangler.h */; };
 		1B81B015136BA2BD002AA257 /* Random.c in Sources */ = {isa = PBXBuildFile; fileRef = 1B81B001136BA2BD002AA257 /* Random.c */; };
 		1B81B016136BA2BD002AA257 /* Random.h in Headers */ = {isa = PBXBuildFile; fileRef = 1B81B002136BA2BD002AA257 /* Random.h */; };
-		1B81B258136BA2C5002AA257 /* Matrix.c in Sources */ = {isa = PBXBuildFile; fileRef = 1B81B136136BA2C5002AA257 /* Matrix.c */; };
-		1B81B259136BA2C5002AA257 /* Matrix.h in Headers */ = {isa = PBXBuildFile; fileRef = 1B81B137136BA2C5002AA257 /* Matrix.h */; };
-		1B81B25E136BA2C5002AA257 /* Quaternion.c in Sources */ = {isa = PBXBuildFile; fileRef = 1B81B13C136BA2C5002AA257 /* Quaternion.c */; };
-		1B81B25F136BA2C5002AA257 /* Quaternion.h in Headers */ = {isa = PBXBuildFile; fileRef = 1B81B13D136BA2C5002AA257 /* Quaternion.h */; };
-		1B81B267136BA2C5002AA257 /* Vector.c in Sources */ = {isa = PBXBuildFile; fileRef = 1B81B145136BA2C5002AA257 /* Vector.c */; };
-		1B81B268136BA2C5002AA257 /* Vector.h in Headers */ = {isa = PBXBuildFile; fileRef = 1B81B146136BA2C5002AA257 /* Vector.h */; };
 		1B81B272136CD811002AA257 /* GLConverter.h in Headers */ = {isa = PBXBuildFile; fileRef = 1B81B270136CD811002AA257 /* GLConverter.h */; };
 		1B81B273136CD811002AA257 /* GLConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = 1B81B271136CD811002AA257 /* GLConverter.m */; };
 		76891D5829BC485E00C8629B /* ScreenCaptureKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 76891D5729BC485E00C8629B /* ScreenCaptureKit.framework */; };
 		76891D5A29BC488000C8629B /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 76891D5929BC488000C8629B /* AVFoundation.framework */; };
+		76CA64A32E128BA8001C1150 /* Vector.h in Headers */ = {isa = PBXBuildFile; fileRef = 76CA64A12E128BA8001C1150 /* Vector.h */; };
+		76CA64A42E128BA8001C1150 /* Vector.c in Sources */ = {isa = PBXBuildFile; fileRef = 76CA64A22E128BA8001C1150 /* Vector.c */; };
 		76E8802929BC5F8D006EDBE7 /* ConfigSheet.nib in Resources */ = {isa = PBXBuildFile; fileRef = 76E8802829BC5F8D006EDBE7 /* ConfigSheet.nib */; };
 		8D255AC70486D3F9007BF209 /* LotsaWater_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 32DBCFA80370C50100C91783 /* LotsaWater_Prefix.pch */; };
 		8D255AC80486D3F9007BF209 /* LotsaWaterView.h in Headers */ = {isa = PBXBuildFile; fileRef = F50079790118B23001CA0E54 /* LotsaWaterView.h */; };
@@ -47,18 +43,14 @@
 		1B81B000136BA2BD002AA257 /* NameMangler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NameMangler.h; sourceTree = "<group>"; };
 		1B81B001136BA2BD002AA257 /* Random.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Random.c; sourceTree = "<group>"; };
 		1B81B002136BA2BD002AA257 /* Random.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Random.h; sourceTree = "<group>"; };
-		1B81B136136BA2C5002AA257 /* Matrix.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Matrix.c; sourceTree = "<group>"; };
-		1B81B137136BA2C5002AA257 /* Matrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Matrix.h; sourceTree = "<group>"; };
-		1B81B13C136BA2C5002AA257 /* Quaternion.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Quaternion.c; sourceTree = "<group>"; };
-		1B81B13D136BA2C5002AA257 /* Quaternion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Quaternion.h; sourceTree = "<group>"; };
-		1B81B145136BA2C5002AA257 /* Vector.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Vector.c; sourceTree = "<group>"; };
-		1B81B146136BA2C5002AA257 /* Vector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Vector.h; sourceTree = "<group>"; };
 		1B81B270136CD811002AA257 /* GLConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GLConverter.h; sourceTree = "<group>"; };
 		1B81B271136CD811002AA257 /* GLConverter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GLConverter.m; sourceTree = "<group>"; };
 		32DBCFA80370C50100C91783 /* LotsaWater_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LotsaWater_Prefix.pch; sourceTree = "<group>"; };
 		76891D5529BC409200C8629B /* LotsaWater.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LotsaWater.entitlements; sourceTree = "<group>"; };
 		76891D5729BC485E00C8629B /* ScreenCaptureKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScreenCaptureKit.framework; path = System/Library/Frameworks/ScreenCaptureKit.framework; sourceTree = SDKROOT; };
 		76891D5929BC488000C8629B /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		76CA64A12E128BA8001C1150 /* Vector.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Vector.h; sourceTree = "<group>"; };
+		76CA64A22E128BA8001C1150 /* Vector.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Vector.c; sourceTree = "<group>"; };
 		76E8802829BC5F8D006EDBE7 /* ConfigSheet.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; path = ConfigSheet.nib; sourceTree = "<group>"; };
 		76E8802A29BC6020006EDBE7 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		8D255AD20486D3F9007BF209 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -156,22 +148,10 @@
 		1B81B017136BA2C4002AA257 /* GLObject */ = {
 			isa = PBXGroup;
 			children = (
-				1B81B0F7136BA2C4002AA257 /* Vector */,
+				76CA64A12E128BA8001C1150 /* Vector.h */,
+				76CA64A22E128BA8001C1150 /* Vector.c */,
 			);
 			path = GLObject;
-			sourceTree = "<group>";
-		};
-		1B81B0F7136BA2C4002AA257 /* Vector */ = {
-			isa = PBXGroup;
-			children = (
-				1B81B136136BA2C5002AA257 /* Matrix.c */,
-				1B81B137136BA2C5002AA257 /* Matrix.h */,
-				1B81B13C136BA2C5002AA257 /* Quaternion.c */,
-				1B81B13D136BA2C5002AA257 /* Quaternion.h */,
-				1B81B145136BA2C5002AA257 /* Vector.c */,
-				1B81B146136BA2C5002AA257 /* Vector.h */,
-			);
-			path = Vector;
 			sourceTree = "<group>";
 		};
 		76891D5629BC485E00C8629B /* Frameworks */ = {
@@ -191,14 +171,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D255AC70486D3F9007BF209 /* LotsaWater_Prefix.pch in Headers */,
+				76CA64A32E128BA8001C1150 /* Vector.h in Headers */,
 				8D255AC80486D3F9007BF209 /* LotsaWaterView.h in Headers */,
 				1B0BFC92091EC98F0012580D /* Water.h in Headers */,
 				1B81B012136BA2BD002AA257 /* LotsaView.h in Headers */,
 				1B81B014136BA2BD002AA257 /* NameMangler.h in Headers */,
 				1B81B016136BA2BD002AA257 /* Random.h in Headers */,
-				1B81B259136BA2C5002AA257 /* Matrix.h in Headers */,
-				1B81B25F136BA2C5002AA257 /* Quaternion.h in Headers */,
-				1B81B268136BA2C5002AA257 /* Vector.h in Headers */,
 				1B81B272136CD811002AA257 /* GLConverter.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -286,13 +264,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				76CA64A42E128BA8001C1150 /* Vector.c in Sources */,
 				8D255ACC0486D3F9007BF209 /* LotsaWaterView.m in Sources */,
 				1B0BFC93091EC98F0012580D /* Water.c in Sources */,
 				1B81B013136BA2BD002AA257 /* LotsaView.m in Sources */,
 				1B81B015136BA2BD002AA257 /* Random.c in Sources */,
-				1B81B258136BA2C5002AA257 /* Matrix.c in Sources */,
-				1B81B25E136BA2C5002AA257 /* Quaternion.c in Sources */,
-				1B81B267136BA2C5002AA257 /* Vector.c in Sources */,
 				1B81B273136CD811002AA257 /* GLConverter.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

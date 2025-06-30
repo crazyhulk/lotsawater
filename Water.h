@@ -1,7 +1,7 @@
 #ifndef __WATER_H__
 #define __WATER_H__
 
-#include "GLObject/Vector/Vector.h"
+#include "GLObject/Vector.h"
 
 typedef struct WaterState WaterState;
 typedef struct Water Water;
