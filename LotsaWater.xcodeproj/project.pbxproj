@@ -23,6 +23,15 @@
 		76CA64A32E128BA8001C1150 /* Vector.h in Headers */ = {isa = PBXBuildFile; fileRef = 76CA64A12E128BA8001C1150 /* Vector.h */; };
 		76CA64A42E128BA8001C1150 /* Vector.c in Sources */ = {isa = PBXBuildFile; fileRef = 76CA64A22E128BA8001C1150 /* Vector.c */; };
 		76E8802929BC5F8D006EDBE7 /* ConfigSheet.nib in Resources */ = {isa = PBXBuildFile; fileRef = 76E8802829BC5F8D006EDBE7 /* ConfigSheet.nib */; };
+		77METAL01123456789ABCDEF /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77METAL02123456789ABCDEF /* Metal.framework */; };
+		77METAL03123456789ABCDEF /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77METAL04123456789ABCDEF /* MetalKit.framework */; };
+		77METAL05123456789ABCDEF /* MetalConverter.h in Headers */ = {isa = PBXBuildFile; fileRef = 77METAL06123456789ABCDEF /* MetalConverter.h */; };
+		77METAL07123456789ABCDEF /* MetalConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = 77METAL08123456789ABCDEF /* MetalConverter.m */; };
+		77METAL09123456789ABCDEF /* MetalRenderer.h in Headers */ = {isa = PBXBuildFile; fileRef = 77METAL10123456789ABCDEF /* MetalRenderer.h */; };
+		77METAL11123456789ABCDEF /* MetalRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 77METAL12123456789ABCDEF /* MetalRenderer.m */; };
+		77METAL13123456789ABCDEF /* WaterShaders.metal in Resources */ = {isa = PBXBuildFile; fileRef = 77METAL14123456789ABCDEF /* WaterShaders.metal */; };
+		77METAL15123456789ABCDEF /* LotsaWaterMetalView.h in Headers */ = {isa = PBXBuildFile; fileRef = 77METAL16123456789ABCDEF /* LotsaWaterMetalView.h */; };
+		77METAL17123456789ABCDEF /* LotsaWaterMetalView.m in Sources */ = {isa = PBXBuildFile; fileRef = 77METAL18123456789ABCDEF /* LotsaWaterMetalView.m */; };
 		8D255AC70486D3F9007BF209 /* LotsaWater_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 32DBCFA80370C50100C91783 /* LotsaWater_Prefix.pch */; };
 		8D255AC80486D3F9007BF209 /* LotsaWaterView.h in Headers */ = {isa = PBXBuildFile; fileRef = F50079790118B23001CA0E54 /* LotsaWaterView.h */; };
 		8D255ACA0486D3F9007BF209 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C167DFE841241C02AAC07 /* InfoPlist.strings */; };
@@ -57,6 +66,15 @@
 		8D255AD30486D3F9007BF209 /* LotsaWater.saver */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LotsaWater.saver; sourceTree = BUILT_PRODUCTS_DIR; };
 		F50079790118B23001CA0E54 /* LotsaWaterView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LotsaWaterView.h; sourceTree = "<group>"; };
 		F500797A0118B23001CA0E54 /* LotsaWaterView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LotsaWaterView.m; sourceTree = "<group>"; };
+		77METAL02123456789ABCDEF /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		77METAL04123456789ABCDEF /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		77METAL06123456789ABCDEF /* MetalConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MetalConverter.h; sourceTree = "<group>"; };
+		77METAL08123456789ABCDEF /* MetalConverter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MetalConverter.m; sourceTree = "<group>"; };
+		77METAL10123456789ABCDEF /* MetalRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MetalRenderer.h; sourceTree = "<group>"; };
+		77METAL12123456789ABCDEF /* MetalRenderer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MetalRenderer.m; sourceTree = "<group>"; };
+		77METAL14123456789ABCDEF /* WaterShaders.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = WaterShaders.metal; sourceTree = "<group>"; };
+		77METAL16123456789ABCDEF /* LotsaWaterMetalView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LotsaWaterMetalView.h; sourceTree = "<group>"; };
+		77METAL18123456789ABCDEF /* LotsaWaterMetalView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LotsaWaterMetalView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -69,6 +87,8 @@
 				76891D5A29BC488000C8629B /* AVFoundation.framework in Frameworks */,
 				76891D5829BC485E00C8629B /* ScreenCaptureKit.framework in Frameworks */,
 				1B0BFC6A091EC5EB0012580D /* OpenGL.framework in Frameworks */,
+				77METAL01123456789ABCDEF /* Metal.framework in Frameworks */,
+				77METAL03123456789ABCDEF /* MetalKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -93,6 +113,8 @@
 			isa = PBXGroup;
 			children = (
 				1B0BFC69091EC5EB0012580D /* OpenGL.framework */,
+				77METAL02123456789ABCDEF /* Metal.framework */,
+				77METAL04123456789ABCDEF /* MetalKit.framework */,
 				1058C7ADFEA557BF11CA2CBB /* Cocoa.framework */,
 				06F27B2DFFEEEFEF11CA0E56 /* ScreenSaver.framework */,
 			);
@@ -115,8 +137,11 @@
 			children = (
 				F50079790118B23001CA0E54 /* LotsaWaterView.h */,
 				F500797A0118B23001CA0E54 /* LotsaWaterView.m */,
+				77METAL16123456789ABCDEF /* LotsaWaterMetalView.h */,
+				77METAL18123456789ABCDEF /* LotsaWaterMetalView.m */,
 				1B0BFC90091EC98F0012580D /* Water.h */,
 				1B0BFC91091EC98F0012580D /* Water.c */,
+				77METAL14123456789ABCDEF /* WaterShaders.metal */,
 				1B81AFEA136BA2BD002AA257 /* LotsaCore */,
 				1B81B017136BA2C4002AA257 /* GLObject */,
 			);
@@ -136,6 +161,10 @@
 			children = (
 				1B81B270136CD811002AA257 /* GLConverter.h */,
 				1B81B271136CD811002AA257 /* GLConverter.m */,
+				77METAL06123456789ABCDEF /* MetalConverter.h */,
+				77METAL08123456789ABCDEF /* MetalConverter.m */,
+				77METAL10123456789ABCDEF /* MetalRenderer.h */,
+				77METAL12123456789ABCDEF /* MetalRenderer.m */,
 				1B81AFFE136BA2BD002AA257 /* LotsaView.h */,
 				1B81AFFF136BA2BD002AA257 /* LotsaView.m */,
 				1B81B000136BA2BD002AA257 /* NameMangler.h */,
@@ -178,6 +207,9 @@
 				1B81B014136BA2BD002AA257 /* NameMangler.h in Headers */,
 				1B81B016136BA2BD002AA257 /* Random.h in Headers */,
 				1B81B272136CD811002AA257 /* GLConverter.h in Headers */,
+				77METAL05123456789ABCDEF /* MetalConverter.h in Headers */,
+				77METAL09123456789ABCDEF /* MetalRenderer.h in Headers */,
+				77METAL15123456789ABCDEF /* LotsaWaterMetalView.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -245,6 +277,7 @@
 				8D255ACA0486D3F9007BF209 /* InfoPlist.strings in Resources */,
 				76E8802929BC5F8D006EDBE7 /* ConfigSheet.nib in Resources */,
 				1B0BFFD9092039AF0012580D /* reflections.png in Resources */,
+				77METAL13123456789ABCDEF /* WaterShaders.metal in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -291,6 +324,9 @@
 				1B81B013136BA2BD002AA257 /* LotsaView.m in Sources */,
 				1B81B015136BA2BD002AA257 /* Random.c in Sources */,
 				1B81B273136CD811002AA257 /* GLConverter.m in Sources */,
+				77METAL07123456789ABCDEF /* MetalConverter.m in Sources */,
+				77METAL11123456789ABCDEF /* MetalRenderer.m in Sources */,
+				77METAL17123456789ABCDEF /* LotsaWaterMetalView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
