@@ -31,7 +31,7 @@
 	<key>NSHumanReadableCopyright</key>
 	<string>2011 Dag Ågren</string>
 	<key>NSPrincipalClass</key>
-	<string>LWLotsaWaterView</string>
+	<string>LWLotsaWaterMetalView</string>
 	<key>NSUserNotificationsUsageDescription</key>
 	<string>alert</string>
 </dict>

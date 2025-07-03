@@ -4,7 +4,7 @@ using namespace metal;
 struct VertexIn {
     float2 position [[attribute(0)]];
     float2 texCoord [[attribute(1)]];
-    uchar4 color [[attribute(2)]];
+    float4 color [[attribute(2)]];
     float3 normal [[attribute(3)]];
 };
 
@@ -29,22 +29,13 @@ vertex VertexOut waterVertexShader(VertexIn in [[stage_in]],
 {
     VertexOut out;
     
-    float4 worldPosition = float4(in.position.x, in.position.y, 0.0, 1.0);
-    out.position = uniforms.projectionMatrix * uniforms.modelViewMatrix * worldPosition;
+    // Ultra-simple vertex test - fixed positions to ensure something renders
+    out.position = float4(in.position.x, in.position.y, 0.0, 1.0);
     
     out.texCoord0 = in.texCoord;
-    
-    float3 normal = normalize(in.normal);
-    float3 incident = float3(0.0, 0.0, -1.0);
-    float3 reflected = reflect(incident, normal);
-    
-    out.texCoord1 = float2(
-        reflected.x * 0.5 + 0.5,
-        reflected.y * 0.5 + 0.5
-    );
-    
-    out.color = float4(in.color) / 255.0;
-    out.normal = normal;
+    out.texCoord1 = in.texCoord;
+    out.color = in.color;
+    out.normal = in.normal;
     
     return out;
 }
@@ -54,10 +45,33 @@ fragment float4 waterFragmentShader(VertexOut in [[stage_in]],
                                     texture2d<float> reflectionTexture [[texture(1)]],
                                     sampler textureSampler [[sampler(0)]])
 {
-    float4 backgroundSample = backgroundTexture.sample(textureSampler, in.texCoord0);
-    float4 reflectionSample = reflectionTexture.sample(textureSampler, in.texCoord1);
+    // Fix macOS coordinate system - flip Y coordinate for desktop capture
+    float2 texCoord = in.texCoord0;
+    texCoord.y = 1.0 - texCoord.y;  // Flip Y to match macOS desktop orientation
     
-    float4 color = backgroundSample * in.color + reflectionSample;
+    float2 clampedTexCoord = clamp(texCoord, 0.0, 1.0);
     
-    return color;
+    // Sample the background texture using the refracted texture coordinates
+    // This matches OpenGL texture unit 0 with GL_MODULATE
+    float4 backgroundColor = backgroundTexture.sample(textureSampler, clampedTexCoord);
+    
+    // Apply vertex color modulation with bright foreground colors
+    // Since vertex colors are now white, this should preserve original colors
+    float4 modulatedColor = backgroundColor * in.color;
+    
+    // Sample reflection texture using sphere mapping coordinates from normal
+    // This matches OpenGL texture unit 1 with GL_ADD and GL_SPHERE_MAP
+    float3 normalizedNormal = normalize(in.normal);
+    
+    // Convert normal to sphere map coordinates (mimics OpenGL GL_SPHERE_MAP)
+    float2 sphereCoord;
+    sphereCoord.x = normalizedNormal.x * 0.5 + 0.5;
+    sphereCoord.y = normalizedNormal.y * 0.5 + 0.5;  // Keep original mapping for reflection
+    
+    float4 reflectionColor = reflectionTexture.sample(textureSampler, sphereCoord);
+    
+    // Restore normal water effect
+    float4 finalColor = modulatedColor + reflectionColor * 0.1;
+    
+    return finalColor;
 }

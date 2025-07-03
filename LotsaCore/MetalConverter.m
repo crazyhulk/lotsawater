@@ -36,13 +36,13 @@
             pixelFormat = MTLPixelFormatR8Unorm;
             break;
         case 24:
-            pixelFormat = MTLPixelFormatRGBA8Unorm_sRGB;
+            pixelFormat = MTLPixelFormatRGBA8Unorm;
             break;
         case 32:
             if ([self bitmapFormatFor:bm] & NSAlphaFirstBitmapFormat) {
-                pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
+                pixelFormat = MTLPixelFormatBGRA8Unorm;
             } else {
-                pixelFormat = MTLPixelFormatRGBA8Unorm_sRGB;
+                pixelFormat = MTLPixelFormatRGBA8Unorm;
             }
             break;
         default:

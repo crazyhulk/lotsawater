@@ -9,7 +9,7 @@
 typedef struct {
     simd_float2 position;
     simd_float2 texCoord;
-    simd_uchar4 color;
+    simd_float4 color;
     simd_float3 normal;
 } WaterVertex;
 
