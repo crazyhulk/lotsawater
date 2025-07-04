@@ -10,18 +10,12 @@
         _commandQueue = [device newCommandQueue];
         
         if (!_commandQueue) {
-            NSLog(@"⚠️ Failed to create Metal command queue");
             return nil;
         }
-        
-        NSLog(@"✅ Metal device and command queue created successfully");
         
         if (![self setupRenderPipeline]) {
-            NSLog(@"⚠️ Failed to setup Metal render pipeline");
             return nil;
         }
-        
-        NSLog(@"✅ Metal renderer initialized successfully");
     }
     return self;
 }
@@ -33,66 +27,40 @@
     // Try to get the default library first (compiled shaders)
     id<MTLLibrary> library = [self.device newDefaultLibrary];
     
-    if (library) {
-        NSLog(@"✅ Using compiled Metal library (default.metallib)");
-    } else {
+    if (!library) {
         // Try loading from bundle path
         NSBundle *bundle = [NSBundle bundleForClass:[self class]];
         NSURL *libURL = [bundle URLForResource:@"default" withExtension:@"metallib"];
         if (libURL) {
             library = [self.device newLibraryWithURL:libURL error:&error];
-            if (library) {
-                NSLog(@"✅ Loaded Metal library from bundle path");
-            } else {
-                NSLog(@"❌ Error loading library from bundle: %@", error.localizedDescription);
-            }
-        } else {
-            NSLog(@"⚠️ Default library not found, trying source fallback");
         }
         
         // If that fails, try loading from source (fallback for development)
         if (!library) {
             NSBundle *bundle = [NSBundle bundleForClass:[self class]];
-        NSURL *shaderURL = [bundle URLForResource:@"WaterShaders" withExtension:@"metal"];
-        if (!shaderURL) {
-            NSLog(@"❌ Could not find WaterShaders.metal file in bundle: %@", bundle.bundlePath);
-            return NO;
-        }
-        
-        NSString *shaderSource = [NSString stringWithContentsOfURL:shaderURL encoding:NSUTF8StringEncoding error:&error];
-        if (!shaderSource) {
-            NSLog(@"❌ Error reading shader source: %@", error.localizedDescription);
-            return NO;
-        }
-        
-        library = [self.device newLibraryWithSource:shaderSource options:nil error:&error];
-        if (!library) {
-            NSLog(@"❌ Error creating library from source: %@", error.localizedDescription);
-            return NO;
-        }
-        
-        NSLog(@"✅ Created Metal library from source");
+            NSURL *shaderURL = [bundle URLForResource:@"WaterShaders" withExtension:@"metal"];
+            if (!shaderURL) {
+                return NO;
+            }
+            
+            NSString *shaderSource = [NSString stringWithContentsOfURL:shaderURL encoding:NSUTF8StringEncoding error:&error];
+            if (!shaderSource) {
+                return NO;
+            }
+            
+            library = [self.device newLibraryWithSource:shaderSource options:nil error:&error];
+            if (!library) {
+                return NO;
+            }
         }
     }
     
     id<MTLFunction> vertexFunction = [library newFunctionWithName:@"waterVertexShader"];
     id<MTLFunction> fragmentFunction = [library newFunctionWithName:@"waterFragmentShader"];
     
-    if (!vertexFunction) {
-        NSLog(@"❌ Could not find vertex shader function 'waterVertexShader'");
-        NSArray *functionNames = [library functionNames];
-        NSLog(@"ℹ️ Available functions: %@", functionNames);
+    if (!vertexFunction || !fragmentFunction) {
         return NO;
     }
-    
-    if (!fragmentFunction) {
-        NSLog(@"❌ Could not find fragment shader function 'waterFragmentShader'");
-        NSArray *functionNames = [library functionNames];
-        NSLog(@"ℹ️ Available functions: %@", functionNames);
-        return NO;
-    }
-    
-    NSLog(@"✅ Found both vertex and fragment shader functions");
     
     MTLRenderPipelineDescriptor *pipelineDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
     pipelineDescriptor.vertexFunction = vertexFunction;
@@ -132,11 +100,9 @@
     
     _pipelineState = [self.device newRenderPipelineStateWithDescriptor:pipelineDescriptor error:&error];
     if (!_pipelineState) {
-        NSLog(@"❌ Error creating pipeline state: %@", error.localizedDescription);
         return NO;
     }
     
-    NSLog(@"✅ Metal render pipeline state created successfully");
     return YES;
 }
 
@@ -211,8 +177,6 @@
     
     // Early exit if no data to render
     if (!_vertexBuffer || !_indexBuffer || !_pipelineState) {
-        NSLog(@"⚠️ Metal Renderer: Missing critical data - vertexBuffer:%@ indexBuffer:%@ pipelineState:%@", 
-              _vertexBuffer ? @"✓" : @"✗", _indexBuffer ? @"✓" : @"✗", _pipelineState ? @"✓" : @"✗");
         [renderEncoder endEncoding];
         return;
     }
@@ -226,23 +190,8 @@
     [renderEncoder setVertexBuffer:_vertexBuffer offset:0 atIndex:0];
     [renderEncoder setVertexBuffer:_uniformBuffer offset:0 atIndex:1];
     
-    NSLog(@"🔧 Vertex buffer: %@ (%lu bytes)", _vertexBuffer, [_vertexBuffer length]);
-    NSLog(@"🔧 Index buffer: %@ (%lu bytes)", _indexBuffer, [_indexBuffer length]);
-    
-    // Debug: Log first few vertices
-    if (_vertexBuffer && [_vertexBuffer length] >= sizeof(WaterVertex)) {
-        WaterVertex *verts = (WaterVertex *)[_vertexBuffer contents];
-        NSLog(@"🔍 First vertex: pos(%.3f,%.3f) tex(%.3f,%.3f) color(%.3f,%.3f,%.3f,%.3f)", 
-              verts[0].position.x, verts[0].position.y,
-              verts[0].texCoord.x, verts[0].texCoord.y,
-              verts[0].color.x, verts[0].color.y, verts[0].color.z, verts[0].color.w);
-    }
-    
     if (_backgroundTexture) {
         [renderEncoder setFragmentTexture:_backgroundTexture atIndex:0];
-        NSLog(@"🖼️ Background texture set: %@", _backgroundTexture);
-    } else {
-        NSLog(@"⚠️ No background texture available");
     }
     
     if (_reflectionTexture) {
@@ -260,7 +209,6 @@
     [renderEncoder setFragmentSamplerState:sampler atIndex:0];
     
     NSUInteger indexCount = [_indexBuffer length] / sizeof(uint16_t);
-    NSLog(@"🎨 Drawing %lu triangles with index buffer", indexCount / 3);
     
     [renderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle
                               indexCount:indexCount

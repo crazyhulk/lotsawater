@@ -6,24 +6,17 @@
 
 - (id)init
 {
-    NSLog(@"🎯 LotsaWaterMetalView init called");
     return [self initWithFrame:NSMakeRect(0, 0, 800, 600) isPreview:NO];
 }
 
 - (id)initWithFrame:(NSRect)frame
 {
-    NSLog(@"🎯 LotsaWaterMetalView initWithFrame(NSRect) called: frame=%.0fx%.0f", 
-          frame.size.width, frame.size.height);
     return [self initWithFrame:frame isPreview:NO];
 }
 
 - (id)initWithFrame:(NSRect)frame isPreview:(BOOL)preview
 {
-    NSLog(@"🎯 LotsaWaterMetalView initWithFrame called: frame=%.0fx%.0f, preview=%d", 
-          frame.size.width, frame.size.height, preview);
-    
     if ((self = [super initWithFrame:frame isPreview:preview useGL:NO])) {
-        NSLog(@"✅ LotsaWaterMetalView super initWithFrame succeeded");
         screenshot = nil;
         
         device = MTLCreateSystemDefaultDevice();
@@ -31,8 +24,6 @@
             NSLog(@"Metal is not supported on this device");
             return nil;
         }
-        
-        NSLog(@"🔥 LotsaWater Metal Version Initialized - Device: %@", device.name);
         
         metalView = [[MTKView alloc] initWithFrame:frame device:device];
         metalView.delegate = self;
@@ -46,9 +37,6 @@
         metalView.preferredFramesPerSecond = 60;
         
         [self addSubview:metalView];
-        
-        NSLog(@"🖥️ MTKView configured: frame=%@, device=%@", 
-              NSStringFromRect(frame), device.name);
         
         // Store screen dimensions for Metal rendering
         screen_w = (int)frame.size.width;
@@ -78,7 +66,6 @@
         backgroundTexture = nil;  // Clear cached texture too
         
         // Initialize water system directly here instead of waiting for startAnimation
-        NSLog(@"🏗️ Direct initialization in initWithFrame");
         [self directInitializeWaterSystem];
     }
     
@@ -96,51 +83,23 @@
 - (void)drawRect:(NSRect)rect
 {
     // Metal view handles all rendering - no need to draw here
-    // Force recreation of screenshot for texture testing
-    NSLog(@"🔄 drawRect called - forcing screenshot recreation for color fix testing");
-    if ([self isPreview] || [[self defaults] integerForKey:@"imageSource"] == 0) {
-        screenshot = [self grabScreenShot];
-        backgroundTexture = nil;  // Clear cached texture
-        NSLog(@"📷 Forced screenshot recreation: %@", screenshot ? @"SUCCESS" : @"FAILED");
-        
-        // Dump original screenshot for debugging
-        if (screenshot) {
-            NSString *filename = [NSString stringWithFormat:@"debug_01_original_screenshot_%ldx%ld_%ldBPP.jpg", 
-                                 [screenshot pixelsWide], [screenshot pixelsHigh], [screenshot bitsPerPixel]];
-            [MetalConverter dumpBitmapToFile:screenshot filename:filename];
-        }
-    }
 }
 
 - (void)startAnimation
 {
-    NSLog(@"🚀 startAnimation called - delegating to startAnimationWithDefaults");
     [self startAnimationWithDefaults:[self defaults]];
-    
-    // Force animation to start
-    NSLog(@"🚀 Forcing animation to start - setting interval and starting timer");
     [self setAnimationTimeInterval:1.0/60.0];
     [super startAnimation];
 }
 
 - (void)directInitializeWaterSystem
 {
-    NSLog(@"🌊 Direct water system initialization starting...");
-    
     ScreenSaverDefaults *defaults = [self defaults];
     
     if (!screenshot) {
         if ([self isPreview] || [defaults integerForKey:@"imageSource"] == 0) {
-            NSLog(@"📸 Attempting to grab screenshot...");
             screenshot = [self grabScreenShot];
-            if (screenshot) {
-                NSLog(@"✅ Screenshot captured: %ldx%ld", [screenshot pixelsWide], [screenshot pixelsHigh]);
-            } else {
-                NSLog(@"❌ Failed to capture screenshot");
-            }
         }
-    } else {
-        NSLog(@"✅ Screenshot already exists: %ldx%ld", [screenshot pixelsWide], [screenshot pixelsHigh]);
     }
     
     SeedRandom(time(0));
@@ -180,36 +139,20 @@
     
     switch (srcid) {
         case 0:
-            NSLog(@"📷 Using screenshot as background texture");
-            // Force new screenshot capture to test texture format fix
             screenshot = nil;
             screenshot = [self grabScreenShot];
             if (screenshot) {
-                NSLog(@"📷 Screenshot exists: %ldx%ld pixels, %ld BPP", 
-                      [screenshot pixelsWide], [screenshot pixelsHigh], [screenshot bitsPerPixel]);
                 backgroundTexture = [MetalConverter textureFromRep:screenshot device:device];
                 tex_w = [screenshot pixelsWide];
                 tex_h = [screenshot pixelsHigh];
-                if (backgroundTexture) {
-                    NSLog(@"✅ Background texture created successfully: %ldx%ld", 
-                          backgroundTexture.width, backgroundTexture.height);
-                } else {
-                    NSLog(@"❌ Failed to create background texture from screenshot");
-                }
-            } else {
-                NSLog(@"❌ Screenshot is nil!");
             }
             break;
         case 1: {
-            NSLog(@"🖼️ Using image file as background texture: %@", imagename);
             NSBitmapImageRep *rep = [NSImageRep imageRepWithContentsOfFile:imagename];
             if (rep) {
                 backgroundTexture = [MetalConverter textureFromRep:rep device:device];
                 tex_w = [rep pixelsWide];
                 tex_h = [rep pixelsHigh];
-                NSLog(@"✅ Background texture created from file");
-            } else {
-                NSLog(@"❌ Failed to load image file: %@", imagename);
             }
         }
         break;
@@ -229,21 +172,12 @@
     
     reflectionTexture = [MetalConverter textureFromRep:[self imageRepFromBundle:@"reflections.png"] device:device];
     
-    NSLog(@"🌊 Initializing water with: gridsize=%d, max_p=%d, water_w=%.2f, water_h=%.2f", 
-          gridsize, max_p, water_w, water_h);
-    
     InitWater(&wet, gridsize, gridsize, max_p, max_p, 1, 1, 2 * water_w, 2 * water_h);
-    
-    NSLog(@"💧 Water initialized: wet.w=%d, wet.h=%d, wet.lx=%.2f, wet.ly=%.2f", 
-          wet.w, wet.h, wet.lx, wet.ly);
           
     // Verify water initialization
     if (wet.w <= 1 || wet.h <= 1 || !wet.z || !wet.n) {
         NSLog(@"❌ Water initialization FAILED: invalid dimensions or null pointers");
-        NSLog(@"   wet.w=%d, wet.h=%d, wet.z=%p, wet.n=%p", wet.w, wet.h, wet.z, wet.n);
         return;
-    } else {
-        NSLog(@"✅ Water initialization successful: %dx%d grid with valid data arrays", wet.w, wet.h);
     }
     
     // Add some initial ripples to make the water surface visible from start
@@ -254,7 +188,6 @@
     AddWaterStateAtTime(&wet, &initialDrip1, 0);
     AddWaterStateAtTime(&wet, &initialDrip2, 0);
     AddWaterStateAtTime(&wet, &initialDrip3, 0);
-    NSLog(@"💧 Added initial water ripples for startup visibility");
     
     // Clean up temporary drip states
     CleanupWaterState(&initialDrip1);
@@ -271,19 +204,13 @@
     [renderer setBackgroundTexture:backgroundTexture];
     [renderer setReflectionTexture:reflectionTexture];
     
-    NSLog(@"🔧 Metal setup complete - forcing initial frame generation");
-    
     // Force initial frame generation
     [self animateOneFrame];
-    
-    NSLog(@"✅ Initial frame generated - water system ready");
 }
 
 - (void)startAnimationWithDefaults:(ScreenSaverDefaults *)defaults
 {
-    NSLog(@"🚀 startAnimationWithDefaults called - system should already be initialized");
     // Water system is already initialized in directInitializeWaterSystem
-    // This method is called by the base class but our system is already ready
     [super startAnimationWithDefaults:defaults];
 }
 
@@ -301,12 +228,6 @@
 
 - (void)animateOneFrame
 {
-    static int animationFrameCount = 0;
-    animationFrameCount++;
-    
-    if (animationFrameCount % 60 == 0) {
-        NSLog(@"🔄 animateOneFrame called #%d - dt calculation", animationFrameCount);
-    }
     
     double dt = [self deltaTime];
     t += dt / t_div;
@@ -326,24 +247,14 @@
     
     CalculateWaterSurfaceAtTime(&wet, t);
     
-    // Debug water surface calculation
-    if (wet.z && wet.n) {
-        NSLog(@"🌊 Water surface: z[0]=%.4f, n[0]=(%.3f,%.3f,%.3f)", 
-              wet.z[0], wet.n[0].x, wet.n[0].y, wet.n[0].z);
-    } else {
-        NSLog(@"❌ Water surface arrays are NULL! z=%p, n=%p", wet.z, wet.n);
-    }
-    
     float fade = [[self defaults] floatForKey:@"imageFade"];
     if (![self isPreview] && t < 1) {
         fade = 1 - (1 - fade) * (t * t * (3 - 2 * t));
     }
     
     int i = 0;
-    NSLog(@"🎯 Generating vertices for %dx%d grid", wet.w, wet.h);
     
     if (wet.w <= 1 || wet.h <= 1) {
-        NSLog(@"❌ Invalid water grid size: %dx%d - forcing minimum 24x24", wet.w, wet.h);
         // This shouldn't happen, but if it does, we can't render properly
         return;
     }
@@ -353,12 +264,6 @@
             // Generate proper grid coordinates (0 to 1) - matches OpenGL version
             float u0 = (float)x / (float)(wet.w - 1);
             float v0 = (float)y / (float)(wet.h - 1);
-            
-            // Debug first few and last few vertices
-            if (i < 3 || i >= (wet.w * wet.h - 3)) {
-                NSLog(@"🔍 Vertex[%d]: x=%d, y=%d, u0=%.4f, v0=%.4f (wet.w=%d, wet.h=%d)", 
-                      i, x, y, u0, v0, wet.w, wet.h);
-            }
             
             float n = 1.333f;
             
@@ -387,17 +292,6 @@
             float ndc_x = (u0 * 2.0f - 1.0f);
             float ndc_y = (v0 * 2.0f - 1.0f);  // Keep normal orientation for macOS desktop
             
-            // Debug: Check if texture coordinates are concentrated in one area
-            static int debug_count = 0;
-            if (debug_count < 10) {
-                NSLog(@"Vertex[%d]: u0=%.4f, v0=%.4f, u=%.4f, v=%.4f", i, u0, v0, u, v);
-                debug_count++;
-            }
-            
-            if (i == 0) {
-                NSLog(@"🖼️ tex_w=%d, tex_h=%d, water_w=%.2f, water_h=%.2f, fade=%.4f", tex_w, tex_h, water_w, water_h, fade);
-            }
-            
             vertices[i].position = simd_make_float2(ndc_x, ndc_y);
             vertices[i].texCoord = simd_make_float2(u, v);
             
@@ -409,14 +303,6 @@
             float final_color = c * fade;
             vertices[i].color = simd_make_float4(final_color, final_color, final_color, 1.0f);
             vertices[i].normal = simd_make_float3(wet.n[i].x, wet.n[i].y, wet.n[i].z);
-            
-            // Debug: Log first vertex data every frame
-            if (i == 0) {
-                NSLog(@"🔍 Generated vertex[0]: pos(%.3f,%.3f) tex(%.3f,%.3f) color(%.3f,%.3f,%.3f,%.3f)", 
-                      vertices[i].position.x, vertices[i].position.y,
-                      vertices[i].texCoord.x, vertices[i].texCoord.y,
-                      vertices[i].color.x, vertices[i].color.y, vertices[i].color.z, vertices[i].color.w);
-            }
             
             i++;
         }
@@ -457,18 +343,13 @@
 
 - (void)drawInMTKView:(MTKView *)view
 {
-    static int frameCount = 0;
     static BOOL hasInitialized = NO;
-    frameCount++;
     
     // Lazy initialization check - if constructor wasn't called properly
     if (!hasInitialized && !device) {
-        NSLog(@"🚨 LAZY INITIALIZATION: Constructor not called, initializing in drawInMTKView");
-        
         // Initialize Metal device
         device = MTLCreateSystemDefaultDevice();
         if (!device) {
-            NSLog(@"❌ Failed to create Metal device in lazy initialization");
             return;
         }
         
@@ -479,7 +360,6 @@
         // Create Metal renderer
         renderer = [[MetalRenderer alloc] initWithDevice:device];
         if (!renderer) {
-            NSLog(@"❌ Failed to create Metal renderer in lazy initialization");
             return;
         }
         
@@ -501,32 +381,16 @@
         // Initialize water system
         [self directInitializeWaterSystem];
         hasInitialized = YES;
-        
-        NSLog(@"✅ Lazy initialization completed successfully");
-    }
-    
-    if (frameCount % 60 == 0) { // 每秒日志一次 (60fps)
-        NSLog(@"⚡ Metal Rendering Frame #%d", frameCount);
-        NSLog(@"📊 Debug Status: device=%@, renderer=%@, vertices=%p", 
-              device ? @"✓" : @"✗", renderer ? @"✓" : @"✗", vertices);
-        NSLog(@"💧 Water Status: wet.w=%d, wet.h=%d, wet.z=%p, wet.n=%p", 
-              wet.w, wet.h, wet.z, wet.n);
-        NSLog(@"🎯 View drawable size: %.0fx%.0f", view.drawableSize.width, view.drawableSize.height);
-        NSLog(@"🖼️ Current drawable: %@", view.currentDrawable);
     }
     
     // Check if we have valid data to render
     if (!vertices || !renderer.vertexBuffer) {
-        if (frameCount % 60 == 0) { // Log once per second
-            NSLog(@"⚠️ No render data - clearing to magenta for debugging");
-            NSLog(@"🔍 vertices=%p, renderer.vertexBuffer=%@", vertices, renderer.vertexBuffer);
-        }
-        // Clear to magenta to confirm we can at least clear the screen
+        // Clear to black if no data ready
         id<MTLCommandBuffer> commandBuffer = [renderer.commandQueue commandBuffer];
         MTLRenderPassDescriptor *renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
         renderPassDescriptor.colorAttachments[0].texture = view.currentDrawable.texture;
         renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
-        renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(1.0, 0.0, 1.0, 1.0); // Bright magenta
+        renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 1.0);
         renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
         
         id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
@@ -537,11 +401,8 @@
         return;
     }
     
-    NSLog(@"🎨 Executing full Metal render pipeline");
     id<MTLCommandBuffer> commandBuffer = [renderer.commandQueue commandBuffer];
-    
     [renderer renderToTexture:view.currentDrawable.texture withCommandBuffer:commandBuffer];
-    
     [commandBuffer presentDrawable:view.currentDrawable];
     [commandBuffer commit];
 }
