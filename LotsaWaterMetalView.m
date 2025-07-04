@@ -75,6 +75,7 @@
             nil]];
         
         screenshot = nil;
+        backgroundTexture = nil;  // Clear cached texture too
         
         // Initialize water system directly here instead of waiting for startAnimation
         NSLog(@"🏗️ Direct initialization in initWithFrame");
@@ -95,10 +96,18 @@
 - (void)drawRect:(NSRect)rect
 {
     // Metal view handles all rendering - no need to draw here
-    // Just ensure screenshot is captured for texture usage
-    if (!screenshot) {
-        if ([self isPreview] || [[self defaults] integerForKey:@"imageSource"] == 0) {
-            screenshot = [self grabScreenShot];
+    // Force recreation of screenshot for texture testing
+    NSLog(@"🔄 drawRect called - forcing screenshot recreation for color fix testing");
+    if ([self isPreview] || [[self defaults] integerForKey:@"imageSource"] == 0) {
+        screenshot = [self grabScreenShot];
+        backgroundTexture = nil;  // Clear cached texture
+        NSLog(@"📷 Forced screenshot recreation: %@", screenshot ? @"SUCCESS" : @"FAILED");
+        
+        // Dump original screenshot for debugging
+        if (screenshot) {
+            NSString *filename = [NSString stringWithFormat:@"debug_01_original_screenshot_%ldx%ld_%ldBPP.jpg", 
+                                 [screenshot pixelsWide], [screenshot pixelsHigh], [screenshot bitsPerPixel]];
+            [MetalConverter dumpBitmapToFile:screenshot filename:filename];
         }
     }
 }
@@ -172,6 +181,9 @@
     switch (srcid) {
         case 0:
             NSLog(@"📷 Using screenshot as background texture");
+            // Force new screenshot capture to test texture format fix
+            screenshot = nil;
+            screenshot = [self grabScreenShot];
             if (screenshot) {
                 NSLog(@"📷 Screenshot exists: %ldx%ld pixels, %ld BPP", 
                       [screenshot pixelsWide], [screenshot pixelsHigh], [screenshot bitsPerPixel]);
@@ -370,24 +382,32 @@
                 v = v0;
             }
             
-            // Debug: log detailed calculations for first vertex
-            if (i == 0) {
-                NSLog(@"🔬 Vertex[0] calc: wet.z=%.4f, waterdepth=%.4f, d=%.4f", wet.z[i], waterdepth, d);
-                NSLog(@"🔬 normal=(%.4f,%.4f,%.4f), u0=%.4f, v0=%.4f, u=%.4f, v=%.4f, fade=%.4f", 
-                      wet.n[i].x, wet.n[i].y, wet.n[i].z, u0, v0, u, v, fade);
-                NSLog(@"🖼️ tex_w=%d, tex_h=%d, water_w=%.2f, water_h=%.2f", tex_w, tex_h, water_w, water_h);
-            }
-            
             // Convert from normalized coordinates [0,1] to NDC [-1,1]
             // Match OpenGL transform: glTranslatef(-water_w,water_h,-5); glScalef(2*water_w,-2*water_h,10);
             float ndc_x = (u0 * 2.0f - 1.0f);
             float ndc_y = (v0 * 2.0f - 1.0f);  // Keep normal orientation for macOS desktop
             
+            // Debug: Check if texture coordinates are concentrated in one area
+            static int debug_count = 0;
+            if (debug_count < 10) {
+                NSLog(@"Vertex[%d]: u0=%.4f, v0=%.4f, u=%.4f, v=%.4f", i, u0, v0, u, v);
+                debug_count++;
+            }
+            
+            if (i == 0) {
+                NSLog(@"🖼️ tex_w=%d, tex_h=%d, water_w=%.2f, water_h=%.2f, fade=%.4f", tex_w, tex_h, water_w, water_h, fade);
+            }
+            
             vertices[i].position = simd_make_float2(ndc_x, ndc_y);
             vertices[i].texCoord = simd_make_float2(u, v);
             
-            // Use pure white color to preserve original wallpaper colors
-            vertices[i].color = simd_make_float4(1.0f, 1.0f, 1.0f, 1.0f);
+            // Restore normal-based coloring to match OpenGL version exactly
+            float col_intensity = 3.0f;
+            float c = -(wet.n[i].x + wet.n[i].y) * col_intensity + 1.0f;
+            if (c < 0.0f) c = 0.0f;
+            if (c > 1.0f) c = 1.0f;
+            float final_color = c * fade;
+            vertices[i].color = simd_make_float4(final_color, final_color, final_color, 1.0f);
             vertices[i].normal = simd_make_float3(wet.n[i].x, wet.n[i].y, wet.n[i].z);
             
             // Debug: Log first vertex data every frame

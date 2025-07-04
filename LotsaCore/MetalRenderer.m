@@ -252,8 +252,9 @@
     MTLSamplerDescriptor *samplerDescriptor = [[MTLSamplerDescriptor alloc] init];
     samplerDescriptor.minFilter = MTLSamplerMinMagFilterLinear;
     samplerDescriptor.magFilter = MTLSamplerMinMagFilterLinear;
-    samplerDescriptor.sAddressMode = MTLSamplerAddressModeClampToEdge;
-    samplerDescriptor.tAddressMode = MTLSamplerAddressModeClampToEdge;
+    // Use repeat mode to tile/stretch the wallpaper for proper water ripple effects at edges
+    samplerDescriptor.sAddressMode = MTLSamplerAddressModeRepeat;
+    samplerDescriptor.tAddressMode = MTLSamplerAddressModeRepeat;
     
     id<MTLSamplerState> sampler = [self.device newSamplerStateWithDescriptor:samplerDescriptor];
     [renderEncoder setFragmentSamplerState:sampler atIndex:0];
