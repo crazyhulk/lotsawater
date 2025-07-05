@@ -70,8 +70,9 @@ fragment float4 waterFragmentShader(VertexOut in [[stage_in]],
     float4 reflectionColor = reflectionTexture.sample(textureSampler, sphereCoord);
     
     // Match OpenGL dual texture blending: GL_MODULATE + GL_ADD
-    // Use minimal reflection to preserve accurate colors while maintaining water effects
-    float4 finalColor = modulatedColor + reflectionColor * 0.1;
+    // Use grayscale from reflection as additive lighting
+    float reflectionBrightness = (reflectionColor.r + reflectionColor.g + reflectionColor.b) / 3.0;
+    float4 finalColor = modulatedColor + float4(reflectionBrightness, reflectionBrightness, reflectionBrightness, 0.0) * 0.3;
     
     return finalColor;
 }

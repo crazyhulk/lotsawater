@@ -329,6 +329,7 @@
 	NSBitmapImageRep *rep=[[NSBitmapImageRep alloc] initWithCGImage:image];
 	CGImageRelease(image);
     
+    
 	return rep;
 }
 

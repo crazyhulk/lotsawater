@@ -142,9 +142,23 @@
             screenshot = nil;
             screenshot = [self grabScreenShot];
             if (screenshot) {
+                // Save original screenshot before Metal conversion for debugging comparison
+                NSString *projectDir = @"/Users/xizi/Documents/workspace/macOS/lotsawater";
+                NSString *originalPath = [projectDir stringByAppendingPathComponent:@"screen/metal_original_screenshot.jpg"];
+                NSData *jpegData = [screenshot representationUsingType:NSBitmapImageFileTypeJPEG properties:@{
+                    NSImageCompressionFactor: @0.8
+                }];
+                [jpegData writeToFile:originalPath atomically:YES];
+                NSLog(@"🔍 Original screenshot saved: %@", originalPath);
+                
                 backgroundTexture = [MetalConverter textureFromRep:screenshot device:device];
                 tex_w = [screenshot pixelsWide];
                 tex_h = [screenshot pixelsHigh];
+                
+                // Save Metal background texture for debugging comparison
+                NSString *debugPath = [projectDir stringByAppendingPathComponent:@"screen/metal_background.jpg"];
+                [MetalConverter saveTexture:backgroundTexture toJPEGFile:debugPath];
+                NSLog(@"🔍 Metal background texture saved for debugging: %@", debugPath);
             }
             break;
         case 1: {

@@ -105,6 +105,17 @@
 	switch(srcid)
 	{
 		case 0:
+			// Save OpenGL original screenshot for debugging comparison
+			if (screenshot) {
+				NSString *projectDir = @"/Users/xizi/Documents/workspace/macOS/lotsawater";
+				NSString *originalPath = [projectDir stringByAppendingPathComponent:@"screen/opengl_original_screenshot.jpg"];
+				NSData *jpegData = [screenshot representationUsingType:NSBitmapImageFileTypeJPEG properties:@{
+					NSImageCompressionFactor: @0.8
+				}];
+				[jpegData writeToFile:originalPath atomically:YES];
+				NSLog(@"🔍 OpenGL original screenshot saved: %@", originalPath);
+			}
+			
 			backtex=[GLConverter uncopiedTextureRectangleFromRep:screenshot];
 			tex_w=[screenshot pixelsWide];
 			tex_h=[screenshot pixelsHigh];

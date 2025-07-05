@@ -29,5 +29,8 @@
                   bytesPerRow:(NSUInteger)bytesPerRow 
                     toTexture:(id<MTLTexture>)texture;
 
+// Debugging methods
++ (BOOL)saveTexture:(id<MTLTexture>)texture toJPEGFile:(NSString *)filePath;
++ (NSBitmapImageRep *)bitmapFromTexture:(id<MTLTexture>)texture;
 
 @end

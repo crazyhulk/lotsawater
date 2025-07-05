@@ -87,8 +87,14 @@
                        bytesPerRow:bytesPerRow 
                          toTexture:texture];
     } else if (bitsPerPixel == 32) {
-        // Convert 32-bit data to RGBA format to ensure consistent channel ordering
+        // Debug: Log bitmap properties to understand the format
+        NSBitmapFormat format = [self bitmapFormatFor:bm];
+        NSLog(@"🔍 Bitmap properties: colorSpace=%@, format=0x%lx, bytesPerRow=%lu, samplesPerPixel=%lu", 
+              [bm colorSpaceName], (unsigned long)format, bytesPerRow, [bm samplesPerPixel]);
+        
+        // Use correct format-aware conversion for different bitmap types
         [self convertRGBA32ToRGBA32:pixels 
+                                 bm:bm
                               width:[bm pixelsWide] 
                              height:[bm pixelsHigh] 
                         bytesPerRow:bytesPerRow 
@@ -145,34 +151,50 @@
 }
 
 + (void)convertRGBA32ToRGBA32:(void *)sourcePixels 
+                           bm:(NSBitmapImageRep *)bm
                         width:(NSUInteger)width 
                        height:(NSUInteger)height 
                   bytesPerRow:(NSUInteger)bytesPerRow 
                     toTexture:(id<MTLTexture>)texture
 {
     // This function handles conversion from different 32-bit formats to standard RGBA
+    // macOS screenshots are typically in BGRA format, not ARGB
     NSUInteger totalBytes = bytesPerRow * height;
     uint8_t *rgbaPixels = malloc(totalBytes);
     
     uint8_t *src = (uint8_t *)sourcePixels;
     uint8_t *dst = rgbaPixels;
     
+    // Check bitmap format once before loop
+    NSBitmapFormat format = [self bitmapFormatFor:bm];
+    BOOL isAlphaFirst = (format & NSAlphaFirstBitmapFormat) != 0;
+    
     for (NSUInteger y = 0; y < height; y++) {
         uint8_t *srcRow = src + (y * bytesPerRow);
         uint8_t *dstRow = dst + (y * bytesPerRow);
         
         for (NSUInteger x = 0; x < width; x++) {
-            // Assume source is ARGB (alpha-first) and convert to RGBA
-            uint8_t a = srcRow[x * 4 + 0];  // Alpha (first)
-            uint8_t r = srcRow[x * 4 + 1];  // Red  
-            uint8_t g = srcRow[x * 4 + 2];  // Green
-            uint8_t b = srcRow[x * 4 + 3];  // Blue
+            uint8_t r, g, b, a;
             
-            // Output as RGBA
+            if (isAlphaFirst) {
+                // ARGB format (Alpha first)
+                a = srcRow[x * 4 + 0];  // Alpha
+                r = srcRow[x * 4 + 1];  // Red
+                g = srcRow[x * 4 + 2];  // Green
+                b = srcRow[x * 4 + 3];  // Blue
+            } else {
+                // RGBA format (standard)
+                r = srcRow[x * 4 + 0];  // Red
+                g = srcRow[x * 4 + 1];  // Green
+                b = srcRow[x * 4 + 2];  // Blue
+                a = srcRow[x * 4 + 3];  // Alpha
+            }
+            
+            // Output as RGBA for Metal texture
             dstRow[x * 4 + 0] = r;  // Red
             dstRow[x * 4 + 1] = g;  // Green  
             dstRow[x * 4 + 2] = b;  // Blue
-            dstRow[x * 4 + 3] = a;  // Alpha
+            dstRow[x * 4 + 3] = (a > 0) ? a : 255;  // Preserve alpha but ensure non-zero
         }
     }
     
@@ -183,6 +205,92 @@
                bytesPerRow:bytesPerRow];
     
     free(rgbaPixels);
+}
+
+#pragma mark - Debugging Methods
+
++ (BOOL)saveTexture:(id<MTLTexture>)texture toJPEGFile:(NSString *)filePath
+{
+    if (!texture) {
+        NSLog(@"❌ Cannot save texture: texture is nil");
+        return NO;
+    }
+    
+    NSBitmapImageRep *bitmap = [self bitmapFromTexture:texture];
+    if (!bitmap) {
+        NSLog(@"❌ Failed to create bitmap from texture");
+        return NO;
+    }
+    
+    // Convert to JPEG data
+    NSData *jpegData = [bitmap representationUsingType:NSBitmapImageFileTypeJPEG properties:@{
+        NSImageCompressionFactor: @0.8
+    }];
+    
+    if (!jpegData) {
+        NSLog(@"❌ Failed to create JPEG data from bitmap");
+        return NO;
+    }
+    
+    // Write to file
+    BOOL success = [jpegData writeToFile:filePath atomically:YES];
+    if (success) {
+        NSLog(@"✅ Metal texture saved to: %@", filePath);
+        NSLog(@"   Texture size: %lux%lu, format: %lu", texture.width, texture.height, (unsigned long)texture.pixelFormat);
+    } else {
+        NSLog(@"❌ Failed to write JPEG file to: %@", filePath);
+    }
+    
+    return success;
+}
+
++ (NSBitmapImageRep *)bitmapFromTexture:(id<MTLTexture>)texture
+{
+    if (!texture) {
+        return nil;
+    }
+    
+    NSUInteger width = texture.width;
+    NSUInteger height = texture.height;
+    NSUInteger bytesPerRow = width * 4; // Assuming RGBA format
+    NSUInteger totalBytes = bytesPerRow * height;
+    
+    // Allocate buffer for texture data
+    uint8_t *textureData = malloc(totalBytes);
+    if (!textureData) {
+        NSLog(@"❌ Failed to allocate memory for texture data");
+        return nil;
+    }
+    
+    // Read texture data
+    MTLRegion region = MTLRegionMake2D(0, 0, width, height);
+    [texture getBytes:textureData
+          bytesPerRow:bytesPerRow
+           fromRegion:region
+          mipmapLevel:0];
+    
+    // Create bitmap image rep
+    NSBitmapImageRep *bitmap = [[NSBitmapImageRep alloc] 
+        initWithBitmapDataPlanes:&textureData
+                      pixelsWide:width
+                      pixelsHigh:height
+                   bitsPerSample:8
+                 samplesPerPixel:4
+                        hasAlpha:YES
+                        isPlanar:NO
+                  colorSpaceName:NSDeviceRGBColorSpace
+                     bytesPerRow:bytesPerRow
+                    bitsPerPixel:32];
+    
+    if (!bitmap) {
+        NSLog(@"❌ Failed to create NSBitmapImageRep from texture data");
+        free(textureData);
+        return nil;
+    }
+    
+    // Note: Don't free textureData here as NSBitmapImageRep now owns it
+    
+    return bitmap;
 }
 
 @end
