@@ -201,9 +201,9 @@
     MTLSamplerDescriptor *samplerDescriptor = [[MTLSamplerDescriptor alloc] init];
     samplerDescriptor.minFilter = MTLSamplerMinMagFilterLinear;
     samplerDescriptor.magFilter = MTLSamplerMinMagFilterLinear;
-    // Use repeat mode to tile/stretch the wallpaper for proper water ripple effects at edges
-    samplerDescriptor.sAddressMode = MTLSamplerAddressModeRepeat;
-    samplerDescriptor.tAddressMode = MTLSamplerAddressModeRepeat;
+    // Use clamp to edge mode to match OpenGL edge handling - extends edge pixels instead of repeating texture
+    samplerDescriptor.sAddressMode = MTLSamplerAddressModeClampToEdge;
+    samplerDescriptor.tAddressMode = MTLSamplerAddressModeClampToEdge;
     
     id<MTLSamplerState> sampler = [self.device newSamplerStateWithDescriptor:samplerDescriptor];
     [renderEncoder setFragmentSamplerState:sampler atIndex:0];

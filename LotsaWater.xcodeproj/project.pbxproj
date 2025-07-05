@@ -309,7 +309,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n#!/bin/bash\n\necho \"🔄 ==========Building LotsaWater screensaver...\"\n\necho \"🔄 Killing screensaver processes...\"\nkillall \"System Preferences\" 2>/dev/null || true\n#killall \"System Settings\" 2>/dev/null || true\nkillall legacyScreenSaver 2>/dev/null || true\nPRODUCT=\"${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}\"\nrm -rf ~/Library/Screen\\ Savers/LotsaWater.saver && cp -R ${PRODUCT} ~/Library/Screen\\ Savers/\nopen -a ScreenSaverEngine\necho ${PRODUCT}\n# 截图\nscreencapture -T 3 ${PROJECT_DIR}/screen/screen.jpg\nsleep 1\n\n# 停止屏保\nosascript -e 'tell application \"System Events\" to tell screen saver preferences to stop'\n#exit(0)\n";
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n#!/bin/bash\n\necho \"🔄 ==========Building LotsaWater screensaver...\"\n\necho \"🔄 Killing screensaver processes...\"\nkillall \"System Preferences\" 2>/dev/null || true\n#killall \"System Settings\" 2>/dev/null || true\nkillall legacyScreenSaver 2>/dev/null || true\nPRODUCT=\"${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}\"\nrm -rf ~/Library/Screen\\ Savers/LotsaWater.saver && cp -R ${PRODUCT} ~/Library/Screen\\ Savers/\nopen -a ScreenSaverEngine\necho ${PRODUCT}\n# 截图\nscreencapture -T 2.2 ${PROJECT_DIR}/screen/screen.jpg\nsleep 1\n\n# 停止屏保\n#osascript -e 'tell application \"System Events\" to tell screen saver preferences to stop'\n#exit(0)\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

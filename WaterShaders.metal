@@ -49,23 +49,28 @@ fragment float4 waterFragmentShader(VertexOut in [[stage_in]],
     float2 texCoord = in.texCoord0;
     texCoord.y = 1.0 - texCoord.y;  // Flip Y to match macOS desktop orientation
     
-    // Don't clamp texture coordinates - let the sampler handle edge cases with ClampToEdge
-    // This allows water ripples to create proper distortion effects at edges
+    // Simple edge clamping to match OpenGL GL_TEXTURE_RECTANGLE behavior
+    // Clamp coordinates to valid range [0,1] to avoid sampling black areas
+    texCoord = clamp(texCoord, float2(0.0), float2(1.0));
     
-    // Sample the background texture - let sampler handle out-of-bounds coordinates
     float4 backgroundColor = backgroundTexture.sample(textureSampler, texCoord);
 
     // Apply vertex color modulation for water shading effect
     float4 modulatedColor = backgroundColor * in.color;
     
-    // Sample reflection texture using sphere mapping coordinates from normal
+    // Sample reflection texture using proper OpenGL-style sphere mapping
     float3 normalizedNormal = normalize(in.normal);
+    // OpenGL GL_SPHERE_MAP calculation: includes Z component and view direction
+    float m = 2.0 * sqrt(normalizedNormal.x * normalizedNormal.x + 
+                        normalizedNormal.y * normalizedNormal.y + 
+                        (normalizedNormal.z + 1.0) * (normalizedNormal.z + 1.0));
     float2 sphereCoord;
-    sphereCoord.x = normalizedNormal.x * 0.5 + 0.5;
-    sphereCoord.y = normalizedNormal.y * 0.5 + 0.5;
+    sphereCoord.x = normalizedNormal.x / m + 0.5;
+    sphereCoord.y = normalizedNormal.y / m + 0.5;
     float4 reflectionColor = reflectionTexture.sample(textureSampler, sphereCoord);
     
-    // Combine background with reflection for complete water effect
+    // Match OpenGL dual texture blending: GL_MODULATE + GL_ADD
+    // Use minimal reflection to preserve accurate colors while maintaining water effects
     float4 finalColor = modulatedColor + reflectionColor * 0.1;
     
     return finalColor;

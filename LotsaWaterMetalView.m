@@ -295,8 +295,8 @@
             vertices[i].position = simd_make_float2(ndc_x, ndc_y);
             vertices[i].texCoord = simd_make_float2(u, v);
             
-            // Restore normal-based coloring to match OpenGL version exactly
-            float col_intensity = 3.0f;
+            // Match OpenGL vertex color calculation exactly for proper ripple visibility
+            float col_intensity = 3.0f;  // Must match OpenGL col_intensity for identical ripple patterns
             float c = -(wet.n[i].x + wet.n[i].y) * col_intensity + 1.0f;
             if (c < 0.0f) c = 0.0f;
             if (c > 1.0f) c = 1.0f;
